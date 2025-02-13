@@ -15,6 +15,21 @@ void log(const std::string& text) {
     std::cerr << text << std::endl;
 }
 
+void setup(){
+
+elseif is_laybrinth(){
+    labyrinth();
+}
+elseif is_firefighter(){
+    firefighter();
+}
+else{
+    main_event();
+}
+}
+
+
+
 int main(int argc, char* argv[]) {
     log("Running...");
     API::setColor(0, 0, 'G');
@@ -36,8 +51,9 @@ int main(int argc, char* argv[]) {
 
     // A*
     std::cerr << "Speedrun" << std::endl;
+    if is_speedmode(){
     speedrun();
-
+    }
 }
 
 #endif
