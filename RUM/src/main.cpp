@@ -1,18 +1,25 @@
 #include <Arduino.h>
-
-// put function declarations here:
-int myFunction(int, int);
+#include "ioexpander.h"
+#include "imu.h"
+#include "frontdist.h"
+#include "motors.h"
 
 void setup() {
   // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(9600);
+  Wire.begin();
+  Wire.setClock(400000); // use 400 kHz I2C
+
+  imuSetup();
+  tofSetup();
+  motorSetup();
+
 }
 
 void loop() {
+  delay(500);
   // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  Serial.println(angle());
+  setLeftPWM(800);
+  Serial.println(encLeft.read());
 }
