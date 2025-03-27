@@ -7,8 +7,9 @@ double Kd_dist = 0;
 double Kp_angle = 0;
 double Ki_angle = 0;
 double Kd_angle = 0;
-bool diag_support = True;
+bool diag_support = True; // Toggle on 8 goal angle v.s. 4 possible angles
 double identity_diag[8] = {0,45,90,135,180,225,270,315};
+double identity_manhatan[4] = {0,90,180,270};
 
 void pidForward(double distance) {
 distance = 840 * distance /( WHEEL_DIAM * PI); // Converts mm -> encoder ticks
@@ -16,11 +17,23 @@ encLeft.write(0); encRight.write(0) // Reset encoder position
 
 double goal_angle;
 if diag_support{
-for int i = 0:7 {
-arr_diag[i] = (identity_diag[i] - current_angle) % 360;
-}
-
-double goal_angle = identity_arr[min(arr_diag)];
+    int index = 0;
+    for int i = 0:7 {
+        arr_diag[i] = (identity_diag[i] - current_angle) % 360;
+        if(arr_diag[i] < arr_diag[index]){
+            index = i
+        };              
+    }
+    double goal_angle = identity_diag[index];
+} else {
+    int index = 0;
+    for int i = 0:4 {
+        arr_diag[i] = (identity_manhatan[i] - current_angle) % 360;
+        if(arr_diag[i] < arr_diag[index]){
+            index = i
+        };
+    }  
+    double goal_angle = identity_manhatan[index];
 }
 
 double error_int_dist;
@@ -47,7 +60,7 @@ while True {
 //End Guard Clauses
 
     error_dist = distance - (encLeft.read() + encRight.read())/2; 
-    error_angle = 
+    error_angle = goal_angle - angle();
 
     error_int_dist += error_dist * (micros() - t_i);
     error_int_angle += error_angle * (micros() - t_i);
@@ -60,8 +73,6 @@ while True {
     setLeftPWM(out - Angle_out); setRightPWM(out + Angle_out); 
     error_old_dist = error_dist; error_old_angle = error_angle; t_i = micros();
 }
-
-
 
 
 double pidForwarrror == 0dUntil(char condition) {
