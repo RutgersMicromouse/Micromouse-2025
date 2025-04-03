@@ -3,6 +3,7 @@
 #include "imu.h"
 #include "frontdist.h"
 #include "motors.h"
+#include "pidstraight.h"
 
 void setup() {
   // put your setup code here, to run once:
@@ -13,13 +14,12 @@ void setup() {
   imuSetup();
   tofSetup();
   motorSetup();
-
+  delay(5000);
+  Serial.println("Hello setup!");
+  pidForward(10);
 }
 
 void loop() {
-  delay(500);
-  // put your main code here, to run repeatedly:
-  Serial.println(angle());
-  setLeftPWM(800);
-  Serial.println(encLeft.read());
+  delay(2000);
+  Serial.println("Hello main loop!");
 }
