@@ -30,7 +30,7 @@ void IRAM_ATTR updateLeftEncoder() {
 }
 
 void setLeftPWM(int PWM) {
-  mc.setSpeed(1, PWM);
+  mc.setSpeed(1, -PWM);
   Serial.println("motoro");
 }
 
