@@ -108,7 +108,8 @@ bool MOUSE_GOAL_1(void){
 #endif
 
 bool CHECK_BEACON(void){
- digitalWrite(BEACON_ON_LIGHT_RED,LOW);
+//  digitalWrite(BEACON_ON_LIGHT_RED,LOW);
+  digitalWrite(LED_BUILTIN, HIGH); // turns onboard LED off
 
  if(LOCK == HIGH){
      return LOW;
@@ -119,7 +120,9 @@ bool CHECK_BEACON(void){
   
  
  if(LOCK == LOW){ //
-     digitalWrite(BEACON_ON_LIGHT_RED,HIGH);
+    //  digitalWrite(BEACON_ON_LIGHT_RED,HIGH);
+    digitalWrite(LED_BUILTIN, LOW); // turns onboard LED on
+
 
   #if  OPTION == 1      
   /******************25 ms pulse, 40 kHz*****************************/   
@@ -128,9 +131,13 @@ bool CHECK_BEACON(void){
                                    //locks out irpt
        PULSE = HIGH;
        n = n + 1;
-       PORTB |=  B00001000;            //pin 11 hi
+      //  PORTB |=  B00001000;            //pin 11 hi
+      digitalWrite(10, HIGH);  // Set pin 10 high (pulse the IR led)
+
        delayMicroseconds(12);
-       PORTB &= B11110111;       //pin 11 lo
+      //  PORTB &= B11110111;       //pin 11 lo
+      digitalWrite(10, LOW);  // pin 11 lo
+
        delayMicroseconds(12);
      }//END WHILE
   
@@ -145,6 +152,7 @@ bool CHECK_BEACON(void){
   return HIGH;
  }//END IF LOCK 
 
+ return LOW; // default
 }
 
 void IR_triggerLatch(){     //irpt every other event
@@ -157,34 +165,39 @@ void IR_triggerLatch(){     //irpt every other event
 
 void init_GPIO()
 {
-  pinMode(BEACON_ON_LIGHT_RED,OUTPUT);
-  pinMode(BEACON_OFF_LIGHT_GREEN,OUTPUT);
+  // pinMode(BEACON_ON_LIGHT_RED,OUTPUT);
+  // pinMode(BEACON_OFF_LIGHT_GREEN,OUTPUT);
   pinMode(BEACON,OUTPUT);
-  DDRB = B00001000; 
+  // DDRB = B00001000; // sets pin 11 as output?
+
+
+  pinMode(10, OUTPUT);  // Set pin 11 as an output
+
+
 } 
 
 
 // the setup function runs once when you press reset or power the board
-void setup() {
+void firefighterSetup() {
 Serial.begin(9600);
 init_GPIO();
 attachInterrupt(digitalPinToInterrupt(IR_SENSOR),IR_triggerLatch,RISING);//IR SENSOR NEG PULSE
 }
 
 // the loop function runs over and over again forever
-void loop(){
-
-  #if OPTION == 1
-  Serial.println(MOUSE_GOAL_1()); //"LOW" BEACON NOT DETECTED, "HIGH" BEACON EXTINGUISHED
-  #endif
-
-  #if OPTION == 2
-  //MOUSE_GOAL_2();
-  Serial.println(MOUSE_GOAL_2()); //"0" BEACON NOT DETECTED, "1" APPROACHING DETECTED BEACON
-                                  //"2" BEACON EXTINGUISHED
-  #endif
+void firefighterLoop(){
+  while(true) {
+    #if OPTION == 1
+    // Serial.print("Is the beacon extinguished?: ");
+    Serial.println(MOUSE_GOAL_1()); //"LOW" BEACON NOT DETECTED, "HIGH" BEACON EXTINGUISHED
+    #endif
   
-  
+    #if OPTION == 2
+    //MOUSE_GOAL_2();
+    Serial.println(MOUSE_GOAL_2()); //"0" BEACON NOT DETECTED, "1" APPROACHING DETECTED BEACON
+                                    //"2" BEACON EXTINGUISHED
+    #endif
+  }
   
   
 }//END LOOP
