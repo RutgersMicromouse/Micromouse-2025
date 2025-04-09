@@ -13,7 +13,7 @@ void motorSetup() {
   mc.clearResetFlag();         // Bytes: 0xA9 0x00 0x04
   mc.disableCommandTimeout();  // disables timeout to act the same as old motor drivers (TB6612FNG)
 
-  attachInterrupt(1, updateLeftEncoder, CHANGE);  // Attach an interrupt to at least one of the encoder pins
+  attachInterrupt(2, updateLeftEncoder, CHANGE);  // Attach an interrupt to at least one of the encoder pins
   attachInterrupt(3, updateRightEncoder, CHANGE);  // Attach an interrupt to at least one of the encoder pins
 }
 
@@ -30,10 +30,10 @@ void IRAM_ATTR updateLeftEncoder() {
 }
 
 void setLeftPWM(int PWM) {
-    mc.setSpeed(-1, PWM);
+    mc.setSpeed(1, -PWM);
 }
 
 void setRightPWM(int PWM) {
-    mc.setSpeed(-2, PWM);
+    mc.setSpeed(2, -PWM);
 }
 
