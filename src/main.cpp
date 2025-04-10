@@ -1,41 +1,42 @@
 #include <Wire.h>
-#include <VL53L1X.h>
-#include<Adafruit_BNO055.h>
-// Create a custom I2C bus on pins 21 (SDA) and 22 (SCL)
-VL53L1X sensor;
-Adafruit_BNO055 franny;
-void setup()
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+  
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
+
+void setup(void) 
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
+  Serial.println("Orientation Sensor Test"); Serial.println("");
   Wire.begin(1,2);
-  sensor.setAddress(0x29); // Optional: only needed if you've changed the default
-  sensor.setTimeout(500);
-  sensor.setBus(&Wire);
-  if (!sensor.init()) // Pass custom Wire instance
+  /* Initialise the sensor */
+  if(!bno.begin())
   {
-    Serial.println("Failed to detect and initialize sensor!");
-    while (1);
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
   }
-
-  Serial.println("Sensor initialized");
-
-  sensor.setDistanceMode(VL53L1X::Long);
-  sensor.setMeasurementTimingBudget(50000);
-  sensor.startContinuous(50);
+  
+  delay(1000);
+    
+  bno.setExtCrystalUse(true);
 }
 
-void loop()
+void loop(void) 
 {
-  sensor.read();
-
-  Serial.print("range: ");
-  Serial.print(sensor.ranging_data.range_mm);
-  Serial.print("\tstatus: ");
-  Serial.print(VL53L1X::rangeStatusToString(sensor.ranging_data.range_status));
-  Serial.print("\tpeak signal: ");
-  Serial.print(sensor.ranging_data.peak_signal_count_rate_MCPS);
-  Serial.print("\tambient: ");
-  Serial.print(sensor.ranging_data.ambient_count_rate_MCPS);
-
-  Serial.println();
+  /* Get a new sensor event */ 
+  sensors_event_t event; 
+  bno.getEvent(&event);
+  
+  /* Display the floating point data */
+  Serial.print("X: ");
+  Serial.print(event.orientation.x, 4);
+  Serial.print("\tY: ");
+  Serial.print(event.orientation.y, 4);
+  Serial.print("\tZ: ");
+  Serial.print(event.orientation.z, 4);
+  Serial.println("");
+  
+  delay(100);
 }
