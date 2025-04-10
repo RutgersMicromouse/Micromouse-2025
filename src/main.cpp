@@ -1,41 +1,27 @@
-/*
-This example takes range measurements with the VL53L1X and displays additional
-details (status and signal/ambient rates) for each measurement, which can help
-you determine whether the sensor is operating normally and the reported range is
-valid. The range is in units of mm, and the rates are in units of MCPS (mega
-counts per second).
-*/
-
 #include <Wire.h>
 #include <VL53L1X.h>
 
+// Create a custom I2C bus on pins 21 (SDA) and 22 (SCL)
+TwoWire myWire = TwoWire(1);  // or 1 for a second bus
 VL53L1X sensor;
 
 void setup()
 {
-  // while (!Serial) {}
   Serial.begin(115200);
   Wire.begin(1,2);
-  Wire.setClock(400000); // use 400 kHz I2C
-
+  sensor.setAddress(0x29); // Optional: only needed if you've changed the default
   sensor.setTimeout(500);
-  if (!sensor.init())
+  sensor.setBus(&Wire);
+  if (!sensor.init()) // Pass custom Wire instance
   {
     Serial.println("Failed to detect and initialize sensor!");
     while (1);
   }
-  Serial.println("pickle sandwiches");
-  // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
-  // You can change these settings to adjust the performance of the sensor, but
-  // the minimum timing budget is 20 ms for short distance mode and 33 ms for
-  // medium and long distance modes. See the VL53L1X datasheet for more
-  // information on range and timing limits.
+
+  Serial.println("Sensor initialized");
+
   sensor.setDistanceMode(VL53L1X::Long);
   sensor.setMeasurementTimingBudget(50000);
-
-  // Start continuous readings at a rate of one measurement every 50 ms (the
-  // inter-measurement period). This period should be at least as long as the
-  // timing budget.
   sensor.startContinuous(50);
 }
 
