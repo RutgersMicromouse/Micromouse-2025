@@ -1,10 +1,10 @@
 #include "pidstraight.h"
 //PID for distance
-double Kp_dist = 1;
+double Kp_dist = 0.45;
 double Ki_dist = 0;
 double Kd_dist = 0;
 //PID for angle offset
-double Kp_angle = 0.5;
+double Kp_angle = 0;
 double Ki_angle = 0;
 double Kd_angle = 0;
 
