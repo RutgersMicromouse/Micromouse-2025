@@ -1,10 +1,9 @@
 #include <Wire.h>
 #include <VL53L1X.h>
-
+#include<Adafruit_BNO055.h>
 // Create a custom I2C bus on pins 21 (SDA) and 22 (SCL)
-TwoWire myWire = TwoWire(1);  // or 1 for a second bus
 VL53L1X sensor;
-
+Adafruit_BNO055 franny;
 void setup()
 {
   Serial.begin(115200);
