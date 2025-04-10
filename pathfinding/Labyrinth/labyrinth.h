@@ -1,7 +1,7 @@
 #ifndef labyrinth_h
 #define labyrinth_h
 
-#include "API.h"
+#include "../API/API.h"
 
 void labyrinth();
 

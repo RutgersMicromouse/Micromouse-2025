@@ -4,10 +4,10 @@
 #pragma once
 
 
-#include "..\src\lib\distance_sensor.h"
-#include "..\src\lib\pidRotate.h"
-#include "..\src\lib\pidStraight.h"
-#include "..\src\lib\IMU.h"
+#include "../lib/distanceSensor/distance_sensor.h"
+#include "../lib/pidRotate/pidRotate.h"
+#include "../lib/pidStraight/pidStraight.h"
+#include "../lib/IMU/imu.h"
 
 #include <string>
 
