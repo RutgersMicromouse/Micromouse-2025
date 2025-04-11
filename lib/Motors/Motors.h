@@ -1,0 +1,21 @@
+#ifndef motors_h
+#define motors_h
+
+// #include<Encoder.h>
+
+#define AIN1_LEFTMOT 10 //IN1
+#define AIN2_LEFTMOT 11 //IN2
+#define BIN1_RIGHTMOT 13 //IN3 
+#define BIN2_RIGHTMOT 12 //IN4
+
+// extern Encoder encLeft;
+// extern Encoder encRight;
+
+
+void moveLeftMotor(uint8_t leftPWM, char direction);
+void moveRightMotor(uint8_t rightPWM, char direction);
+void stopMotors();
+void setupMotors();
+
+
+#endif
