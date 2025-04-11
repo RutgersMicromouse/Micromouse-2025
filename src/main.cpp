@@ -1,42 +1,61 @@
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <utility/imumaths.h>
-  
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
+#include <Arduino.h>
 
-void setup(void) 
-{
-  Serial.begin(9600);
-  Serial.println("Orientation Sensor Test"); Serial.println("");
-  Wire.begin(1,2);
-  /* Initialise the sensor */
-  if(!bno.begin())
-  {
-    /* There was a problem detecting the BNO055 ... check your connections */
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
-  }
-  
-  delay(1000);
-    
-  bno.setExtCrystalUse(true);
+// === Pin Definitions ===
+#define AIN1_PIN 10
+#define AIN2_PIN 11
+#define BIN1_PIN 13
+#define BIN2_PIN 12
+
+// === Motor Control Functions ===
+
+// Motor A forward at given speed (0–255)
+void motorA_forward(uint8_t speed) {
+  analogWrite(AIN1_PIN, speed);
+  digitalWrite(AIN2_PIN, HIGH);
 }
 
-void loop(void) 
-{
-  /* Get a new sensor event */ 
-  sensors_event_t event; 
-  bno.getEvent(&event);
-  
-  /* Display the floating point data */
-  Serial.print("X: ");
-  Serial.print(event.orientation.x, 4);
-  Serial.print("\tY: ");
-  Serial.print(event.orientation.y, 4);
-  Serial.print("\tZ: ");
-  Serial.print(event.orientation.z, 4);
-  Serial.println("");
-  
-  delay(100);
+// Motor A reverse at given speed (0–255)
+void motorA_reverse(uint8_t speed) {
+  digitalWrite(AIN1_PIN, LOW);
+  analogWrite(AIN2_PIN, speed);
+}
+
+// Motor B forward at given speed (0–255)
+void motorB_forward(uint8_t speed) {
+  analogWrite(BIN1_PIN, speed);
+  digitalWrite(BIN2_PIN, HIGH);
+}
+
+// Motor B reverse at given speed (0–255)
+void motorB_reverse(uint8_t speed) {
+  digitalWrite(BIN1_PIN, LOW);
+  analogWrite(BIN2_PIN, speed);
+}
+
+// Motor A stop
+void motorA_stop() {
+  digitalWrite(AIN1_PIN, LOW);
+  digitalWrite(AIN2_PIN, LOW);
+}
+
+// Motor B stop
+void motorB_stop() {
+  digitalWrite(BIN1_PIN, LOW);
+  digitalWrite(BIN2_PIN, LOW);
+}
+
+void setup() {
+  // Setup pins
+  pinMode(AIN1_PIN, OUTPUT);
+  pinMode(AIN2_PIN, OUTPUT);
+  pinMode(BIN1_PIN, OUTPUT);
+  pinMode(BIN2_PIN, OUTPUT);
+
+  // Start motors forward at 75% speed
+  motorA_forward(90); // 75% of 255
+  motorB_forward(90);
+}
+
+void loop() {
+  // Do nothing, motors keep running
 }
