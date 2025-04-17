@@ -12,8 +12,8 @@
 // extern Encoder encRight;
 
 
-void moveLeftMotor(uint8_t leftPWM, char direction);
-void moveRightMotor(uint8_t rightPWM, char direction);
+void moveLeftMotor(int PWM);
+void moveRightMotor(int PWM);
 void stopMotors();
 void setupMotors();
 

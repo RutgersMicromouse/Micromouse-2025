@@ -35,7 +35,7 @@ void moveLeftMotor(int PWM) {
     actualmoveleftmotor(PWM,'N');
   }
   else{
-    actualmoveleftmotor(PWM,'X');
+    actualmoveleftmotor(-PWM,'X');
   }
 }
 
@@ -57,7 +57,7 @@ void moveRightMotor(int PWM) {
     actualmoveRightMotor(PWM,'N');
   }
   else{
-    actualmoveRightMotor(PWM,'X');
+    actualmoveRightMotor(-PWM,'X');
   }
 }
 
