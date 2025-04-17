@@ -2,17 +2,17 @@
 
 #include <string>
 
-#define SIM
-// #define REAL
+//#define SIM
+#define REAL
 
 // define physical libraries if real
 #ifdef REAL
 
-#include "..\src\lib\distance_sensor.h"
-#include "..\src\lib\pidRotate.h"
-#include "..\src\lib\pidStraight.h"
-#include "..\src\lib\IMU.h"
-
+#include "frontdist.h"
+#include "pidrotate.h"
+#include "pidstraight.h"
+#include "imu.h"
+#include "ioexpander.h"
 #endif
 
 class API {
@@ -25,14 +25,15 @@ public:
     static bool wallLeft();
 
     static void moveForward(int distance = 1);
-    static void moveForwardHalf(int numHalfSteps = 1);
+    static void moveForwardHalf(double numHalfSteps = 1);
     static void turnRight();
     static void turnLeft();
-    static void turnRight45();
-    static void turnLeft45();
+
 
 // define simulator functions if sim
 #ifdef SIM 
+    static void turnRight45();
+    static void turnLeft45();
     static int mazeWidth();
     static int mazeHeight();
     static void setWall(int x, int y, char direction);
