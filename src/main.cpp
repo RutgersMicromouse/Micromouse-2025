@@ -9,10 +9,19 @@ void setup() {
   setupMotors();
   setupDistanceSensors();
   setupIMU();
+  
 
 }
 
 void loop() {
+  for(unsigned int i = 0; i < 255; i += 63){
+    moveLeftMotor(i,'N');
+    moveRightMotor(i,'N');
+    delay(1000);
+  }
+  moveLeftMotor(0,'N');
+  moveRightMotor(0,'N');
+  delay(1000);
   // Do nothing, motors keep running
 
   /* Distance Sensor Test

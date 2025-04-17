@@ -18,19 +18,28 @@ void setupMotors(){
   pinMode(BIN2_RIGHTMOT, OUTPUT);
 }
 
-void moveLeftMotor(uint8_t leftPWM, char direction) {
+
+static void actualmoveleftmotor(uint8_t leftPWN, char direction){
   if(direction == 'N') { //moving forward relative to front of robot
     digitalWrite(AIN1_LEFTMOT, HIGH);
     digitalWrite(AIN2_LEFTMOT, LOW);
-    analogWrite(AIN1_LEFTMOT, leftPWM);
+    analogWrite(AIN1_LEFTMOT, leftPWN);
   } else {
     digitalWrite(AIN1_LEFTMOT, LOW);
     digitalWrite(AIN2_LEFTMOT, HIGH);
-    analogWrite(AIN2_LEFTMOT, leftPWM);
+    analogWrite(AIN2_LEFTMOT, leftPWN);
+  }
+}
+void moveLeftMotor(int PWM) {
+  if(PWM > 0){
+    actualmoveleftmotor(PWM,'N');
+  }
+  else{
+    actualmoveleftmotor(PWM,'X');
   }
 }
 
-void moveRightMotor(uint8_t rightPWM, char direction) {
+static void actualmoveRightMotor(uint8_t rightPWM, char direction) {
   if(direction == 'N') { //moving forward relative to front of robot
     digitalWrite(BIN1_RIGHTMOT, LOW);
     digitalWrite(BIN2_RIGHTMOT, HIGH);
@@ -41,6 +50,15 @@ void moveRightMotor(uint8_t rightPWM, char direction) {
     analogWrite(BIN1_RIGHTMOT, rightPWM);
   }
 
+}
+
+void moveRightMotor(int PWM) {
+  if(PWM > 0){
+    actualmoveRightMotor(PWM,'N');
+  }
+  else{
+    actualmoveRightMotor(PWM,'X');
+  }
 }
 
 void stopMotors() {
