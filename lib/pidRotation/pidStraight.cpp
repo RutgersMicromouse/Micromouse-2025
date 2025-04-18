@@ -1,4 +1,5 @@
 #include "pidStraight.h"
+#define DIA 32
 
 double minPWM = 100;
 double maxPWM = 200;
@@ -13,7 +14,7 @@ void straight(char direction){
     double totalTime = millis();
     double previousAngle = 0;
     double derivative = angle();
-    double kd = 15; //Previous value was 2
+    double kd = 15; 
 
     switch(direction) {
         case 'N':
@@ -55,7 +56,6 @@ void straight(char direction){
 
         leftMotorSpeed = 150 + kp*error - kd*derivative;
         rightMotorSpeed = 150 - kp*error + kd*derivative;
-        rightMotorSpeed *= 1.15;
 
         if (leftMotorSpeed < minPWM){
             leftMotorSpeed = minPWM;
@@ -71,8 +71,8 @@ void straight(char direction){
             rightMotorSpeed = maxPWM;
         }
         
-        Serial.printf("%lf\t%lf\t",error,leftMotorSpeed);
-        Serial.printf("%lf\n",rightMotorSpeed);
+      //  Serial.printf("%lf\t%lf\t",error,leftMotorSpeed);
+       // Serial.printf("%lf\n",rightMotorSpeed);
         moveLeftMotor(leftMotorSpeed);
         moveRightMotor(rightMotorSpeed);
 
@@ -85,3 +85,4 @@ void straight(char direction){
     }
 
 }
+

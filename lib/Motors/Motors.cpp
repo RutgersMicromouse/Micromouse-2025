@@ -3,23 +3,35 @@
 #define PI 3.1415926535897932384626433832795
 
 
-// Encoder encRight(2,3);
-// Encoder encLeft(10,11);
+Encoder encRight(encRIGHTPIN1,encRIGHTPIN2);
+Encoder encLeft(encLEFTPIN1,encLEFTPIN2);
 
 //IN1 and IN2 are for Motor A
 //IN3 and IN4 are for Motor B
 
 //Call analogWrite on the pin that is high
 
+void setupEncoders() {
+    pinMode(encRIGHTPIN1, INPUT_PULLUP);
+    pinMode(encRIGHTPIN2, INPUT_PULLUP);
+    pinMode(encLEFTPIN1, INPUT_PULLUP);
+    pinMode(encLEFTPIN2, INPUT_PULLUP);
+}
+
 void setupMotors(){
   pinMode(AIN1_LEFTMOT, OUTPUT);
   pinMode(AIN2_LEFTMOT, OUTPUT);
   pinMode(BIN1_RIGHTMOT, OUTPUT);
   pinMode(BIN2_RIGHTMOT, OUTPUT);
+
+  setupEncoders();
+
+  Serial.println("Motors are setup!");
 }
 
 
-static void actualmoveleftmotor(uint8_t leftPWN, char direction){
+
+static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
   if(direction == 'N') { //moving forward relative to front of robot
     digitalWrite(AIN1_LEFTMOT, HIGH);
     digitalWrite(AIN2_LEFTMOT, LOW);
@@ -32,14 +44,14 @@ static void actualmoveleftmotor(uint8_t leftPWN, char direction){
 }
 void moveLeftMotor(int PWM) {
   if(PWM > 0){
-    actualmoveleftmotor(PWM,'N');
+    actualMoveLeftMotor(PWM,'N');
   }
   else{
-    actualmoveleftmotor(-PWM,'X');
+    actualMoveLeftMotor(-PWM,'X');
   }
 }
 
-static void actualmoveRightMotor(uint8_t rightPWM, char direction) {
+static void actualMoveRightMotor(uint8_t rightPWM, char direction) {
   if(direction == 'N') { //moving forward relative to front of robot
     digitalWrite(BIN1_RIGHTMOT, LOW);
     digitalWrite(BIN2_RIGHTMOT, HIGH);
@@ -54,10 +66,10 @@ static void actualmoveRightMotor(uint8_t rightPWM, char direction) {
 
 void moveRightMotor(int PWM) {
   if(PWM > 0){
-    actualmoveRightMotor(PWM,'N');
+    actualMoveRightMotor(PWM,'N');
   }
   else{
-    actualmoveRightMotor(-PWM,'X');
+    actualMoveRightMotor(-PWM,'X');
   }
 }
 
@@ -66,6 +78,8 @@ void stopMotors() {
   digitalWrite(AIN2_LEFTMOT, LOW);
   digitalWrite(BIN1_RIGHTMOT, LOW);
   digitalWrite(BIN2_RIGHTMOT, LOW);
+
+
 
   
 }

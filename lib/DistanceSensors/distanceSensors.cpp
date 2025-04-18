@@ -15,7 +15,7 @@ void setupDistanceSensors()
     while (1);
   }
 
-  Serial.println("Sensor initialized");
+  Serial.println("TOF Sensor initialized.");
   sensor.setDistanceMode(VL53L1X::Long);
   sensor.setMeasurementTimingBudget(50000);
   sensor.startContinuous(50);

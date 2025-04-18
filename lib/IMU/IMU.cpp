@@ -7,6 +7,7 @@ void setupIMU() {
     bno = Adafruit_BNO055(55, 0x28);
   
     if (!bno.begin()) Serial.print("No BNO055 detected");
+    else Serial.println("IMU is setup!");
 }
 
 double angle() {

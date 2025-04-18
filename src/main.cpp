@@ -1,9 +1,9 @@
 #include <Arduino.h>
-#include "..\lib\Motors\Motors.h"
-#include "..\lib\DistanceSensors\distanceSensors.h"
-#include "..\lib\IMU\IMU.h"
-#include "..\lib\pidRotation\pidRotate.h"
-#include "..\lib\pidRotation\pidStraight.h"
+#include "../lib/Motors/Motors.h"
+#include "../lib/DistanceSensors/distanceSensors.h"
+#include "../lib/IMU/IMU.h"
+#include "../lib/pidRotation/pidRotate.h"
+#include "../lib/pidRotation/pidStraight.h"
 
 void setup() {
   Serial.begin(9600);
@@ -11,6 +11,9 @@ void setup() {
   setupDistanceSensors();
   setupIMU();
   Wire.setClock(40000);
+  straight('N');
+
+
 
 }
 
@@ -37,9 +40,17 @@ void loop() {
   //   Serial.println(distance);
   // }
   //turnTo('E');
-  straight('N');
+
+    
+
+
+
+
+
   
-  //Serial.println(angle());
+ // Serial.println(angle());
+
+ 
   
   
   
