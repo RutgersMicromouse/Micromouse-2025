@@ -3,13 +3,16 @@
 #define PI 3.1415926535897932384626433832795
 
 
-Encoder encRight(encRIGHTPIN1,encRIGHTPIN2);
+Encoder encRight(encRIGHTPIN2,encRIGHTPIN1);
 Encoder encLeft(encLEFTPIN1,encLEFTPIN2);
 
 //IN1 and IN2 are for Motor A
 //IN3 and IN4 are for Motor B
 
 //Call analogWrite on the pin that is high
+int32_t getLeftEncoder(){
+  return encLeft.read();
+}
 
 void setupEncoders() {
     pinMode(encRIGHTPIN1, INPUT_PULLUP);
@@ -83,9 +86,3 @@ void stopMotors() {
 
   
 }
-
-
-
-
-
-

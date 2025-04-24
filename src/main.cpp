@@ -11,7 +11,10 @@ void setup() {
   setupDistanceSensors();
   setupIMU();
   Wire.setClock(40000);
-  straight('N');
+  // straight('N');
+  while(1){
+    Serial.printf("%d %d\n",encRight.read(),encLeft.read());
+  }
 
 
 

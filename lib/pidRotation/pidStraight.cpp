@@ -48,12 +48,6 @@ void straight(char direction){
 
         derivative = (currentAngle - previousAngle)/(totalTime - previousTime);
 
-        //Serial.printf("Error: %lf\n", error);
-
-        // if (derivative != 0){
-        //     Serial.printf("Derivative: %lf\n", derivative);
-        // }
-
         leftMotorSpeed = 150 + kp*error - kd*derivative;
         rightMotorSpeed = 150 - kp*error + kd*derivative;
 
@@ -75,7 +69,7 @@ void straight(char direction){
        // Serial.printf("%lf\n",rightMotorSpeed);
         moveLeftMotor(leftMotorSpeed);
         moveRightMotor(rightMotorSpeed);
-
+        Serial.printf("%d\n",getLeftEncoder());
         previousTime = totalTime;
         previousAngle = currentAngle;
 
