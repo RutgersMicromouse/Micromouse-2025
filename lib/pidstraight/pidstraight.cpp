@@ -63,14 +63,16 @@ void pidForward(double distance) {
     
     
     while (true) {
+    
         // Guard Clauses:
         // 1. At the destination
         if (abs(error_dist) <= 20) { setRightPWM(0); setLeftPWM(0); return; }
         
         // 2. Stall Condition
         if (micros() > sampleTime + 50e3){
-            if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2)
-                                   { setRightPWM(0); setLeftPWM(0); return; };
+            if (abs(encRight.read() - sampleRight) < 5 || abs(encLeft.read() - sampleLeft) < 5)
+                { setRightPWM(0); setLeftPWM(0); return; };
+                sampleTime=micros(); sampleLeft=encLeft.read();sampleRight=encRight.read();
         }
 
         // 3. Too close to the front wall
@@ -91,7 +93,7 @@ void pidForward(double distance) {
         double angle_out = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
         setLeftPWM(out - angle_out); setRightPWM(out + angle_out); 
 
-
+        
         Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 
         // update error_dist_old, error_angle_old, and t_old
