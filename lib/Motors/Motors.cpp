@@ -3,7 +3,7 @@
 #define PI 3.1415926535897932384626433832795
 
 
-Encoder encRight(encRIGHTPIN2,encRIGHTPIN1);
+Encoder encRight(encRIGHTPIN1,encRIGHTPIN2);
 Encoder encLeft(encLEFTPIN1,encLEFTPIN2);
 
 //IN1 and IN2 are for Motor A
@@ -46,7 +46,7 @@ static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
   }
 }
 void moveLeftMotor(int PWM) {
-  if(PWM > 0){
+  if(PWM >= 0){
     actualMoveLeftMotor(PWM,'N');
   }
   else{
@@ -68,7 +68,7 @@ static void actualMoveRightMotor(uint8_t rightPWM, char direction) {
 }
 
 void moveRightMotor(int PWM) {
-  if(PWM > 0){
+  if(PWM >= 0){
     actualMoveRightMotor(PWM,'N');
   }
   else{
@@ -82,7 +82,4 @@ void stopMotors() {
   digitalWrite(BIN1_RIGHTMOT, LOW);
   digitalWrite(BIN2_RIGHTMOT, LOW);
 
-
-
-  
 }

@@ -70,12 +70,13 @@ void turnTo(char direction) {
         }
 
     
-
         moveLeftMotor(leftMotorSpeed);
         moveRightMotor(rightMotorSpeed);
 
     
     }
+
+    stopMotors();
 
 
 
