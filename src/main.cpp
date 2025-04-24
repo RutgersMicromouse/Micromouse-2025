@@ -11,18 +11,14 @@ void setup() {
   setupDistanceSensors();
   setupIMU();
   Wire.setClock(40000);
-  straight('N');
-  // while(1){
-  //   Serial.printf("%d %d\n",encLeft.read(),encRight.read());
-  // }
-
-
-
-
-
 }
 
 void loop() {
+  // straight('N');
+  // straight('N');
+  turnTo('E');
+  // straight('N');
+  while(1);
   // for(unsigned int i = 0; i < 255; i += 63){
   //   moveLeftMotor(i);
   //   moveRightMotor(i);

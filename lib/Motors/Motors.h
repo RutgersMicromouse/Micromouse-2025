@@ -1,7 +1,7 @@
  #ifndef motors_h
 #define motors_h
 
-#include <Encoder.h>
+#include<ESP32Encoder.h>
 
 #define AIN1_LEFTMOT 10 //IN1
 #define AIN2_LEFTMOT 11 //IN2
@@ -14,8 +14,8 @@
 #define encLEFTPIN1 8
 #define encLEFTPIN2 9
 
-extern Encoder encLeft;
-extern Encoder encRight;
+extern ESP32Encoder encLeft;
+extern ESP32Encoder encRight;
 
 
 void moveLeftMotor(int PWM);
@@ -24,5 +24,6 @@ void stopMotors();
 void setupMotors();
 void setupEncoders();
 int32_t getLeftEncoder();
+int32_t getRightEncoder();
 
 #endif

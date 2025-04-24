@@ -14,7 +14,7 @@ void turnTo(char direction) {
     double totalTime = micros();
     double previousTime = micros();
     double totalError = 0;
-    double ki = 1;
+    double ki = 2;
 
     //Based on direction we want to go to, we set the target angle
     switch(direction) {
@@ -38,11 +38,11 @@ void turnTo(char direction) {
 
         error = targetDirection - currentAngle;
 
-        if (error > 180){
+        while (error > 180){
             error -= 360;
         }
         
-        if (error <= -180){
+        while (error < -180){
             error += 360;
         }
 
@@ -58,20 +58,20 @@ void turnTo(char direction) {
 
        // Serial.printf("Total error: %lf\n", totalError);
 
-        if (leftMotorSpeed > 127){
-            leftMotorSpeed = 127;
-        } else if (leftMotorSpeed < -127){
-            leftMotorSpeed = -127;
+        if (leftMotorSpeed > 100){
+            leftMotorSpeed = 100;
+        } else if (leftMotorSpeed < -100){
+            leftMotorSpeed = -100;
         }
-        if (rightMotorSpeed > 127){
-            rightMotorSpeed = 127;
-        } else if (rightMotorSpeed < -127){
-            rightMotorSpeed = -127;
+        if (rightMotorSpeed > 100){
+            rightMotorSpeed = 100;
+        } else if (rightMotorSpeed < -100){
+            rightMotorSpeed = -100;
         }
 
     
         moveLeftMotor(leftMotorSpeed);
-        moveRightMotor(rightMotorSpeed);
+        moveRightMotor(rightMotorSpeed * 1.4);
 
     
     }

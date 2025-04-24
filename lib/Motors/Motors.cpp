@@ -3,22 +3,27 @@
 #define PI 3.1415926535897932384626433832795
 
 
-Encoder encRight(encRIGHTPIN1,encRIGHTPIN2);
-Encoder encLeft(encLEFTPIN1,encLEFTPIN2);
+
+ESP32Encoder encLeft;
+ESP32Encoder encRight;
 
 //IN1 and IN2 are for Motor A
 //IN3 and IN4 are for Motor B
 
 //Call analogWrite on the pin that is high
 int32_t getLeftEncoder(){
-  return encLeft.read();
+  return encLeft.getCount();
 }
 
+int32_t getRightEncoder(){
+  return encRight.getCount();
+}
 void setupEncoders() {
-    pinMode(encRIGHTPIN1, INPUT_PULLUP);
-    pinMode(encRIGHTPIN2, INPUT_PULLUP);
-    pinMode(encLEFTPIN1, INPUT_PULLUP);
-    pinMode(encLEFTPIN2, INPUT_PULLUP);
+    ESP32Encoder::useInternalWeakPullResistors = puType::up;
+    encRight.attachHalfQuad(encRIGHTPIN1,encRIGHTPIN2); 
+    encLeft.attachHalfQuad(encLEFTPIN1,encLEFTPIN2);
+    encLeft.clearCount();
+    encRight.clearCount();
 }
 
 void setupMotors(){
