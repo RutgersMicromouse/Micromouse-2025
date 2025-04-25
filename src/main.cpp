@@ -17,7 +17,7 @@ void setup() {
 void loop() {
   // straight('N');
   // straight('N');
-  straight('N', 640);
+  straight('N', 320);
   delay(800);
   // straight('N', 160);
   // delay(100);

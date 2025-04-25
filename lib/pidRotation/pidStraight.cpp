@@ -53,6 +53,8 @@ void straight(char direction, int distance)
         int currentRightError = numTicks - currright;
         int previousLeftError = numTicks - currleft;
         int previousRightError = numTicks - currright;
+
+        int currentAverageError, previousAverageError;
     
         double angleError;
         double leftEncoderDeriv = 0;
@@ -60,7 +62,6 @@ void straight(char direction, int distance)
 
         double oldLeftSpeed = 0;
         double oldRightSpeed = 0;
-
 
         int startTime = millis();
 
@@ -82,24 +83,22 @@ void straight(char direction, int distance)
             //Calculating derivative
             derivative = (currentAngle - previousAngle) / (totalTime - previousTime);
             //Calculating left and right motor speed
+            currentAverageError = (currentLeftError + currentRightError)/2;
 
-            leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
-            rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
-
-            currentLeftError = constrain(currentLeftError, 0, maxPWM);
-            currentRightError = constrain(currentRightError, 0, maxPWM);    
+            leftEncoderDeriv = (currentAverageError - previousAverageError) / (totalTime - previousTime);
+            rightEncoderDeriv = (currentAverageError - previousAverageError) / (totalTime - previousTime);
 
             // Serial.printf("old left speed: %lf\told right speed: %lf\n",oldLeftSpeed,oldRightSpeed);
 
             oldLeftSpeed = leftMotorSpeed;
             oldRightSpeed = rightMotorSpeed;
 
-            if(currentLeftError < 50) {
-                anglekP = currentLeftError/70;
+            if(currentAverageError < 24) {
+                anglekP = currentAverageError/70;
             }
 
-            leftMotorSpeed = (encoderkP * currentLeftError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
-            rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
+            leftMotorSpeed = (encoderkP * currentAverageError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
+            rightMotorSpeed = (encoderkP * currentAverageError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
 
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
@@ -154,6 +153,8 @@ void straight(char direction, int distance)
             previousTime = totalTime;
             previousAngle = currentAngle;
 
+            previousAverageError = currentAverageError;
+        
             currleft = getLeftEncoder();
             currright = -1 * getRightEncoder();
 
@@ -161,6 +162,8 @@ void straight(char direction, int distance)
             previousRightError = currentRightError;
             currentLeftError = numTicks - currleft;
             currentRightError = numTicks - currright;
+
+            currentAverageError = (currentLeftError + currentRightError)/2;
 
             // Serial.printf("Left : %d\t Right : %d\n", currentLeftError,currentRightError);
         }
