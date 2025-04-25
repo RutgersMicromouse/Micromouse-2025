@@ -16,9 +16,20 @@ void setup() {
 void loop() {
   // straight('N');
   // straight('N');
-  // turnTo('E');
   straight('N', 160);
+  delay(100);
+  straight('N', 160);
+  delay(100);
+  turnTo('E');
+  delay(100);
+  straight('N', 160);
+  delay(100);
+  turnTo('E');
+
+
+
   while(1);
+
   // for(unsigned int i = 0; i < 255; i += 63){
   //   moveLeftMotor(i);
   //   moveRightMotor(i);
@@ -43,12 +54,6 @@ void loop() {
   //turnTo('E');
 
     
-
-
-
-
-
-  
  // Serial.println(angle());
 
  
