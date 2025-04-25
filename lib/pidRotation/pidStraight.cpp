@@ -19,8 +19,9 @@ void straight(char direction, int distance)
         double kd = 100;
 
         double encoderkP = 1.5, encoderkD = 1;
-        double anglekP = 5, anglekD = 25;
-    
+        double anglekP = 3, anglekD = 0; //28 before
+
+        // distance *= 0.9;
         int numTicks = (90 * distance) / (DIA * PI); //Num ticks that we need to travel
 
         switch (direction)
@@ -93,17 +94,22 @@ void straight(char direction, int distance)
             oldLeftSpeed = leftMotorSpeed;
             oldRightSpeed = rightMotorSpeed;
 
+            if(currentLeftError < 50) {
+                anglekP = currentLeftError/70;
+            }
+
             leftMotorSpeed = (encoderkP * currentLeftError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
             rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
 
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
 
-            if(leftMotorSpeed > 25|| rightMotorSpeed > 25) {
+            if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
                 startTime = millis();
             }
 
-            if(startTime + 200 < millis()) {
+
+            if(startTime + 50 < millis()) {
                 moveLeftMotor(0);
                 moveRightMotor(0);
                 break;

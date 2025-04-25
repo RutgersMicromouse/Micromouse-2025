@@ -7,6 +7,7 @@
 
 void setup() {
   Serial.begin(9600);
+  delay(1000);
   setupMotors();
   setupDistanceSensors();
   setupIMU();
@@ -16,15 +17,11 @@ void setup() {
 void loop() {
   // straight('N');
   // straight('N');
-  straight('N', 160);
-  delay(100);
-  straight('N', 160);
-  delay(100);
-  turnTo('E');
-  delay(100);
-  straight('N', 160);
-  delay(100);
-  turnTo('E');
+  straight('N', 640);
+  delay(800);
+  // straight('N', 160);
+  // delay(100);
+  // turnTo('E');
 
 
 
