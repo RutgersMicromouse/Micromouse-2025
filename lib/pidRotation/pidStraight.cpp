@@ -5,7 +5,7 @@
 double minPWM = 100;
 double maxPWM = 150;
 
-void straight(char direction)
+void straight(char direction, int distance)
 {
         double currentAngle = angle();
         double targetDirection = 0;
@@ -16,10 +16,10 @@ void straight(char direction)
         double totalTime = millis();
         double previousAngle = 0;
         double derivative = angle();
-        double kd = 0;
+        double kd = 100;
 
-        double distance = 10;
-        int numTicks = (360 * distance) / (DIA * PI);
+        int numTicks = (90 * distance) / (DIA * PI); //Num ticks that we need to travel
+        distance = distance * 0.9;
 
         switch (direction)
         {
@@ -36,33 +36,43 @@ void straight(char direction)
             targetDirection = 270;
             break;
         }
+
+        //Clear the encoder count
         encLeft.clearCount();
         encRight.clearCount();
+
         int currleft = abs(getLeftEncoder());
         int currright = abs(getRightEncoder());
-        while (1)
+
+        int currentLeftError = abs(numTicks - currleft);
+        int currentRightError = abs(numTicks - currright);
+        /* 5*/
+        while (currentLeftError > 5)
         {
+            //Angle readings for IMU
             currentAngle = angle();
             double error = targetDirection - currentAngle;
-
             totalTime = millis();
-
             while(error > 180)
             {
                 error -= 360;
             }
-
             while(error <= -180)
             {
                 error += 360;
             }
-
+            
+            //Calculating derivative
             derivative = (currentAngle - previousAngle) / (totalTime - previousTime);
-
-            leftMotorSpeed = 125 + (kp * error) + (kd * derivative);
-            rightMotorSpeed = 125 - (kp * error) - (kd * derivative);
+            if(derivative != 0){
+                Serial.printf("derivative %lf\n",derivative);
+            }
+            //Calculating left and right motor speed
+            leftMotorSpeed = 125 + (kp * error) - (kd * derivative);
+            rightMotorSpeed = 125 - (kp * error) + (kd * derivative);
             rightMotorSpeed *= 1.4;
 
+            //Constraining the motor speeds
             if (leftMotorSpeed < minPWM)
             {
                 leftMotorSpeed = minPWM;
@@ -80,13 +90,21 @@ void straight(char direction)
             {
                 rightMotorSpeed = maxPWM;
             }
-            Serial.printf("error: %lf\tleft speed: %lf\tright speed: %lf\n",error,leftMotorSpeed,rightMotorSpeed);
+
+            // Serial.printf("error: %lf\tleft speed: %lf\tright speed: %lf\n",error,leftMotorSpeed,rightMotorSpeed);
+            
             moveLeftMotor(leftMotorSpeed);
             moveRightMotor(rightMotorSpeed);
             previousTime = totalTime;
             previousAngle = currentAngle;
+
             currleft = abs(getLeftEncoder());
             currright = abs(getRightEncoder());
+
+            currentLeftError = abs(numTicks - currleft);
+            currentRightError = abs(numTicks - currright);
+
+            // Serial.printf("Left : %d\t Right : %d\n", currleft,currright);
         }
 
         moveLeftMotor(0);

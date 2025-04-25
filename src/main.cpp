@@ -16,8 +16,8 @@ void setup() {
 void loop() {
   // straight('N');
   // straight('N');
-  turnTo('E');
-  // straight('N');
+  // turnTo('E');
+  straight('N', 160);
   while(1);
   // for(unsigned int i = 0; i < 255; i += 63){
   //   moveLeftMotor(i);

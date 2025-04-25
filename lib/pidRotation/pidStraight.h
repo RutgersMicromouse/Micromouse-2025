@@ -3,4 +3,4 @@
 #include "../IMU/IMU.h"
 #include "../Motors/Motors.h"
 
-void straight(char direction);
+void straight(char direction, int distance);
