@@ -2,8 +2,8 @@
 #define DIA 32
 #define PI 3.1415926535897932384626433832795
 
-double minPWM = 100;
-double maxPWM = 150;
+double minPWM = 75;
+double maxPWM = 125;
 
 void straight(char direction, int distance)
 {
@@ -93,9 +93,7 @@ void straight(char direction, int distance)
             oldLeftSpeed = leftMotorSpeed;
             oldRightSpeed = rightMotorSpeed;
 
-            if(currentAverageError < 24) {
-                anglekP = currentAverageError/70;
-            }
+            anglekP = constrain(currentAverageError / 70.0, 0.1, 3.0);
 
             leftMotorSpeed = (encoderkP * currentAverageError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
             rightMotorSpeed = (encoderkP * currentAverageError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
@@ -108,7 +106,7 @@ void straight(char direction, int distance)
             }
 
 
-            if(startTime + 50 < millis()) {
+            if(startTime + 100 < millis()) {
                 moveLeftMotor(0);
                 moveRightMotor(0);
                 break;

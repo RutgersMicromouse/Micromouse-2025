@@ -29,7 +29,8 @@ void turnTo(char direction) {
     }
 
    
-    int startTime = millis();
+    int startTime = micros();
+
     while (1){
         currentAngle = angle();
         totalTime = micros();
@@ -67,11 +68,15 @@ void turnTo(char direction) {
             rightMotorSpeed = -100;
         }
 
-        if(startTime + 200 < millis()) {
-                moveLeftMotor(0);
-                moveRightMotor(0);
-                break;
-            }
+        if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
+            startTime = millis();
+        }
+        
+        if(startTime + 50 < millis()) {
+            moveLeftMotor(0);
+            moveRightMotor(0);
+            break;
+        }
     
         moveLeftMotor(leftMotorSpeed);
         moveRightMotor(rightMotorSpeed * 1.2);
@@ -79,7 +84,8 @@ void turnTo(char direction) {
     
     }
 
-    stopMotors();
+    moveLeftMotor(0);
+    moveRightMotor(0);
 
 
 

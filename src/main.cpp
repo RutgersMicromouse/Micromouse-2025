@@ -17,13 +17,12 @@ void setup() {
 void loop() {
   // straight('N');
   // straight('N');
-  straight('N', 320);
-  delay(800);
   // straight('N', 160);
-  // delay(100);
-  // turnTo('E');
-
-
+  straight('N', 160);
+  delay(1000);
+  turnTo('E');
+  
+  delay(1000);
 
   while(1);
 
