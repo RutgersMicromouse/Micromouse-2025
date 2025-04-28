@@ -3,7 +3,7 @@
 #define PI 3.1415926535897932384626433832795
 
 double minPWM = 75;
-double maxPWM = 135;
+double maxPWM = 175;
 
 void straight(char direction, int distance)
 {
@@ -56,7 +56,6 @@ void straight(char direction, int distance)
             break;
         }
 
-        //Clear the encoder count
         encLeft.clearCount();
         encRight.clearCount();
 
@@ -81,7 +80,6 @@ void straight(char direction, int distance)
         double oldRightSpeed = 0;
 
         int startTime = millis();
-
         while (1)
         {
             //Angle readings for IMU
@@ -108,7 +106,8 @@ void straight(char direction, int distance)
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
 
-            leftMotorSpeed *= 1.01;
+            leftMotorSpeed *= 1.03; //Slight adjusment of left motorspeed
+
 
             if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
                 startTime = millis();
@@ -120,9 +119,6 @@ void straight(char direction, int distance)
                 break;
             }
 
-        
-
-            
             moveLeftMotor(leftMotorSpeed);
             moveRightMotor(rightMotorSpeed);
 
