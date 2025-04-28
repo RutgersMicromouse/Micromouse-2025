@@ -20,6 +20,12 @@ void loop() {
   straight('N', 160);
   straight('N', 160);
   straight('N', 160);
+  turnTo('W');
+  turnTo('S');
+  straight('S', 160);
+  straight('S', 160);
+  straight('S', 160);
+  straight('S', 160);
   
 
   while(1);
