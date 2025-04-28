@@ -3,7 +3,7 @@
 #define PI 3.1415926535897932384626433832795
 
 double minPWM = 75;
-double maxPWM = 125;
+double maxPWM = 135;
 
 void straight(char direction, int distance)
 {
@@ -11,18 +11,34 @@ void straight(char direction, int distance)
         double targetDirection = 0;
         double leftMotorSpeed = 0;
         double rightMotorSpeed = 0;
-        double kp = 8;
+       // double kp = 8;
         double previousTime = millis();
         double totalTime = millis();
         double previousAngle = 0;
         double derivative = angle();
-        double kd = 100;
+      //  double kd = 100;
 
-        double encoderkP = 1.5, encoderkD = 1;
-        double anglekP = 3, anglekD = 0; //28 before
+        double encoderkP, encoderkD;
+        double anglekP, anglekD;
 
-        // distance *= 0.9;
-        int numTicks = (90 * distance) / (DIA * PI); //Num ticks that we need to travel
+        if(distance == 160) {
+            encoderkP = 0.9;
+            encoderkD = 0.1;
+            anglekP = 1.5;
+            anglekD = 2.1; 
+        } else if(distance > 160){
+            encoderkP = 1.5;
+            encoderkD = 5;
+            anglekP = 0;  
+            anglekD = 0;
+        } else {
+            encoderkP = 1.3;
+            encoderkD = 0.5;
+            anglekP = 0;
+            anglekD = 0;
+        }
+
+        int numTicks = (98 * distance) / (DIA * PI); //Num ticks that we need to travel
 
         switch (direction)
         {
@@ -46,6 +62,7 @@ void straight(char direction, int distance)
 
         int currleft = getLeftEncoder();
         int currright = getRightEncoder();
+
         int newLeft = currleft;
         int newRight = currright;
 
@@ -79,32 +96,23 @@ void straight(char direction, int distance)
             {
                 angleError += 360;
             }
-            
+        
             //Calculating derivative
             derivative = (currentAngle - previousAngle) / (totalTime - previousTime);
+            leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
+            rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
+
             //Calculating left and right motor speed
-            currentAverageError = (currentLeftError + currentRightError)/2;
-
-            leftEncoderDeriv = (currentAverageError - previousAverageError) / (totalTime - previousTime);
-            rightEncoderDeriv = (currentAverageError - previousAverageError) / (totalTime - previousTime);
-
-            // Serial.printf("old left speed: %lf\told right speed: %lf\n",oldLeftSpeed,oldRightSpeed);
-
-            oldLeftSpeed = leftMotorSpeed;
-            oldRightSpeed = rightMotorSpeed;
-
-            anglekP = constrain(currentAverageError / 70.0, 0.1, 3.0);
-
-            leftMotorSpeed = (encoderkP * currentAverageError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
-            rightMotorSpeed = (encoderkP * currentAverageError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
-
+            leftMotorSpeed = (encoderkP * currentLeftError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
+            rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
+
+            leftMotorSpeed *= 1.01;
 
             if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
                 startTime = millis();
             }
-
 
             if(startTime + 100 < millis()) {
                 moveLeftMotor(0);
@@ -112,38 +120,8 @@ void straight(char direction, int distance)
                 break;
             }
 
-            oldLeftSpeed = leftMotorSpeed;
-            oldRightSpeed = rightMotorSpeed;
-            // if(derivative != 0)  Serial.printf("angle derivative: %lf\n", derivative);
-
-            // if(rightEncoderDeriv != 0 || leftEncoderDeriv != 0) {
-            //     Serial.printf("left derivative: %lf\t right deriviatve: %lf\n", leftEncoderDeriv, rightEncoderDeriv);
-            // }
-            
-          Serial.printf("left speed: %lf\tright speed: %lf\n",leftMotorSpeed,rightMotorSpeed);
         
-        
-            // leftMotorSpeed = 125 + (kp * error) - (kd * derivative);
-            // rightMotorSpeed = 125 - (kp * error) + (kd * derivative);
-            // rightMotorSpeed *= 1.4;
 
-            //Constraining the motor speeds
-            // if (leftMotorSpeed < minPWM)
-            // {
-            //     leftMotorSpeed = minPWM;
-            // }
-            // else if (leftMotorSpeed > maxPWM)
-            // {
-            //     leftMotorSpeed = maxPWM;
-            // }
-            // if (rightMotorSpeed < minPWM)
-            // {
-            //     rightMotorSpeed = minPWM;
-            // }
-            // else if (rightMotorSpeed > maxPWM)
-            // {
-            //     rightMotorSpeed = maxPWM;
-            // }
             
             moveLeftMotor(leftMotorSpeed);
             moveRightMotor(rightMotorSpeed);
@@ -163,10 +141,13 @@ void straight(char direction, int distance)
 
             currentAverageError = (currentLeftError + currentRightError)/2;
 
-            // Serial.printf("Left : %d\t Right : %d\n", currentLeftError,currentRightError);
+            Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
+
         }
 
         moveLeftMotor(0);
         moveRightMotor(0);
         Serial.println("Done");
     }
+
+

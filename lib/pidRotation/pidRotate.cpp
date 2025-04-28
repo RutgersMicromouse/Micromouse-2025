@@ -4,13 +4,13 @@ void turnTo(char direction) {
     double targetDirection = 0;
     double currentAngle = angle();
     double error = 0;
-    double kp = 1.25;
+    double kp = 1.35;
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
     double totalTime = micros();
     double previousTime = micros();
     double totalError = 0;
-    double ki = 0;
+    double ki = 2;
 
     //Based on direction we want to go to, we set the target angle
     switch(direction) {
@@ -68,18 +68,16 @@ void turnTo(char direction) {
             rightMotorSpeed = -100;
         }
 
-        if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
-            startTime = millis();
-        }
-        
-        if(startTime + 50 < millis()) {
-            moveLeftMotor(0);
-            moveRightMotor(0);
-            break;
-        }
+       if(abs(error) < 0.5) {
+        startTime = micros();
+        moveLeftMotor(0);
+        moveRightMotor(0);
+        break;
+       }
+      
     
         moveLeftMotor(leftMotorSpeed);
-        moveRightMotor(rightMotorSpeed * 1.2);
+        moveRightMotor(rightMotorSpeed);
 
     
     }
