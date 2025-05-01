@@ -103,10 +103,15 @@ void imageToAscii() {
   for (int y = 0; y < fb->height; y++) { // Iterate over rows
     for (int x = 0; x < fb->width; x++) { // Iterate over columns
       uint8_t gray = image_data[y * fb->width + x];
-
-      
+      if (gray > 170) {
+        gray = 255;
+      }
+      if (gray < 170){
+        gray = 0;
+      }
       char ascii_char = ASCII_CHARS[gray / 25]; // 256 / 10 = 25, so 0-25 -> 0, 26-50 -> 1, ..., 226-255 -> 9
       Serial.print(ascii_char);
+      
       
   }
   Serial.println(); // Newline at the end of each row
@@ -120,7 +125,7 @@ void imageToAscii() {
   esp_camera_fb_return(fb);
 
   // Delay before capturing next frame
-  delay(50); // 1 second delay
+  delay(500); // 1 second delay
 
 
 }
@@ -182,7 +187,7 @@ void followEdge() {
 
     if (edge_position != -1) {
       int error = (fb->width / 2) - edge_position;
-      int motor_speed = 100 + error; // Simple proportional control
+      int motor_speed = 10 + error; // Simple proportional control
       Serial.printf("Following line - Edge position: %d, Error: %d, Motor speed: %d\n",
                     edge_position, error, motor_speed);
 

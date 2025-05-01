@@ -30,7 +30,7 @@ void setup() {
 void loop() {
   followEdge();
 
-    // imageToAscii();
+    imageToAscii();
     // delay(500);
     // digitalWrite(LED_BUILTIN, HIGH); 
     // delay(500);
