@@ -124,3 +124,48 @@ void imageToAscii() {
 
 
 }
+
+// void followEdge() {
+//   // Capture a frame
+//   camera_fb_t * fb = esp_camera_fb_get();
+//   if (!fb) {
+//     Serial.println("Camera capture failed");
+//     return;
+//   }
+
+//   // Access the image data
+//   uint8_t* image_data = fb->buf;
+
+//   // Define the threshold for detecting the edge of the line
+//   const uint8_t threshold = 128; // Adjust this value based on your lighting conditions
+
+//   // Iterate over the middle row of the image to detect the edge
+//   int edge_position = -1;
+//   for (int x = 0; x < fb->width; x++) {
+//     uint8_t gray = image_data[(fb->height / 2) * fb->width + x];
+//     if (gray > threshold) {
+//       edge_position = x;
+//       break;
+//     }
+//   }
+
+//   // Adjust the robot's movement based on the position of the edge
+//   if (edge_position != -1) {
+//     int error = (fb->width / 2) - edge_position; // Calculate the error from the center
+//     // Use a simple proportional control to adjust the robot's movement
+//     int motor_speed = 100 + error; // Adjust the base speed and gain as needed
+//     Serial.printf("Edge position: %d, Error: %d, Motor speed: %d\n", edge_position, error, motor_speed);
+
+//     // Add your motor control code here to adjust the robot's movement
+//     // For example:
+//     // setMotorSpeed(motor_speed, -motor_speed); // Assuming a differential drive robot
+//   } else {
+//     Serial.println("Edge not found");
+//   }
+
+//   // Return the frame buffer back to the driver
+//   esp_camera_fb_return(fb);
+
+//   // Delay before capturing next frame
+//   delay(100); // Adjust the delay as needed
+// }
