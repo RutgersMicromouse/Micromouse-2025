@@ -4,6 +4,7 @@
 // https://github.com/limengdu/SeeedStudio-XIAO-ESP32S3-Sense-camera/tree/main
 #include<Arduino.h>
 #include "esp_camera.h"
+#include "motors.h"
 
 #define CAMERA_MODEL_XIAO_ESP32S3 // Has PSRAM
 
@@ -16,5 +17,6 @@ void cameraSetup();
 #define ASCII_CHARS "#@%*+=-:. "
 
 void imageToAscii();
+void followEdge();
 
 
