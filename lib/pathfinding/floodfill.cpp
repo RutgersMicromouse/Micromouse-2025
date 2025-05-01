@@ -1,19 +1,38 @@
 #include "./floodfill.h"
-#include "./API.h"
+
+
+#include "API.h"
 #include<queue>
 #include<stack>
 #include<cstdio>
+static int steps = 0;
+typedef struct
+{
+  uint8_t x;
+  uint8_t y;
+} point;
+
+typedef struct{
+  point location;
+  uint8_t direction;
+} mouse_t;
+
+typedef struct{
+  float weight;
+  point parent;
+  bool visited;
+} cell;
 
 
 cell maze[33][33]; // Center is 14, 14
 mouse_t mouse;
 point dest;
 int i = 0;
-void stall(){
-    API::turnLeft();
-    API::turnLeft();
-    API::turnLeft();
-    API::turnLeft();
+static void stall(){
+    API::turnLeft(mouse.direction);
+    API::turnLeft(mouse.direction);
+    API::turnLeft(mouse.direction);
+    API::turnLeft(mouse.direction);
 }
 
 uint16_t floodfill_expand = 0;
@@ -62,7 +81,7 @@ static bool haswestwall(point p) {
     return maze[p.x - 1][p.y].weight == -2;
 }
 
-void reflood() {
+static void reflood() {
     std::queue<point> myqueue;
     // std::stack<point> myqueue;
     myqueue.push(dest);
@@ -106,7 +125,7 @@ void reflood() {
 
 
 
-void initialize_maze(uint8_t x, uint8_t y, bool reset) {
+void initialize_maze(uint8_t x, uint8_t y,bool reset){
     dest.x = x;
     dest.y = y;
     std::queue<point> myqueue;
@@ -118,7 +137,7 @@ void initialize_maze(uint8_t x, uint8_t y, bool reset) {
             }
         }
         mouse.location.x = mouse.location.y = 1;
-        mouse.direction = 'n';
+        mouse.direction = N;
     }
     else{
         for (int i = 0; i < 33; i++) {
@@ -262,104 +281,111 @@ static void setwalls(mouse_t mike) {
 }
 
 static void realturn(uint8_t direction){
+    // Serial.printf("direction: %d\n",direction);
+    // while(1); 
     if(mouse.direction == N){
         if(direction == N){
-            API::moveForward();
+            API::moveForward(1,mouse.direction);
             mouse.location.y += 2;
         }
         else if(direction == E){
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x += 2;
         }
         else if(direction == S){
-            API::turnRight();
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.y -= 2;
         }
         else if(direction  == W){
-            API::turnLeft();
-            API::moveForward();
+            API::turnLeft(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x -= 2;
         }
     }
     else if(mouse.direction  == E){
         if(direction  == E){
-            API::moveForward();
+            API::moveForward(1,mouse.direction);
             mouse.location.x += 2;
         }
         else if(direction == S){
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.y -= 2;
         }
         else if(direction  == W){
-            API::turnRight();
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x -= 2;
         }
         else if(direction  == N){
-            API::turnLeft();
-            API::moveForward();
+            API::turnLeft(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.y += 2;
         }
     }
     else if(mouse.direction == S){
         if(direction == S){
-            API::moveForward();
+            API::moveForward(1,mouse.direction);
             mouse.location.y -= 2;
         }
         else if(direction  == W){
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x -= 2;
         }
         else if(direction  == N){
-            API::turnRight();
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.y += 2;
         }
         else if(direction  == E){
-            API::turnLeft();
-            API::moveForward();
+            API::turnLeft(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x += 2;
         }
     }
     else if(mouse.direction  == W){
         if(direction  == W){
-            API::moveForward();
+            API::moveForward(1,mouse.direction);
             mouse.location.x -= 2;
         }
         else if(direction  == N){
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            
+            API::moveForward(1,mouse.direction);
             mouse.location.y += 2;
         }
         else if(direction  == E){
-            API::turnRight();
-            API::turnRight();
-            API::moveForward();
+            API::turnRight(mouse.direction);
+            API::turnRight(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.x += 2;
         }
         else if(direction == S){
-            API::turnLeft();
-            API::moveForward();
+            API::turnLeft(mouse.direction);
+            API::moveForward(1,mouse.direction);
             mouse.location.y -= 2;
         }
     }
     mouse.direction = direction;
 }
 
-void set_visited(point p){
+static void set_visited(point p){
     if(!maze[p.x][p.y].visited){
         floodfill_expand++;
     }
     maze[p.x][p.y].visited = true;
 }
 void floodfill() {
+    // while(1){
+    //     Serial.printf("Left Wall: %d\t Front Wall: %d\t Right Wall: %d\n", API::wallLeft(), API::wallFront(), API::wallRight());
+
+    // }
     while (mouse.location.x != dest.x || mouse.location.y != dest.y) {
         
         setwalls(mouse);
@@ -401,6 +427,7 @@ THING:
             goto THING;
         }
         else{
+            Serial.printf("direction: %d\n",dec_direction);
             realturn(dec_direction);
             floodfill_expand++;
         }

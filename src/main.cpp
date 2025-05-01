@@ -4,6 +4,7 @@
 #include "../lib/IMU/IMU.h"
 #include "../lib/pidRotation/pidRotate.h"
 #include "../lib/pidRotation/pidStraight.h"
+#include "../pathfinding/floodfill.h"
 
 void setup() {
   Serial.begin(9600);
@@ -12,41 +13,49 @@ void setup() {
   setupDistanceSensors();
   setupIMU();
   Wire.setClock(40000);
+  delay(500);
+  // initialize_maze(0,0,true); 
+  initialize_maze(1,5,true);
+  floodfill();
+  // initialize_maze(1,1,false);
+  // floodfill();
+  // fprintf(stderr,"floodfill - nodes expanded: %d\n",floodfill_expand);
+  //Astar(1,5);
 }
 
 void loop() {
 
   // straight('N', 65);
-  delayMicroseconds(10);
-  straight('N', 160);
-  delayMicroseconds(10);
-  straight('N', 160);
-  delayMicroseconds(10);
-  turnTo('W');
-  delayMicroseconds(10);
-  straight('W', 160);
-  delayMicroseconds(10);
-  turnTo('S');
-  delayMicroseconds(10);
-  straight('S', 160);
-  delayMicroseconds(10);
-  straight('S', 160);
-  delayMicroseconds(10);
-  turnTo('W');
-  delayMicroseconds(10);
-  straight('W', 160);
-
+  // delayMicroseconds(10);
   // straight('N', 160);
+  // delayMicroseconds(10);
   // straight('N', 160);
+  // delayMicroseconds(10);
   // turnTo('W');
+  // delayMicroseconds(10);
+  // straight('W', 160);
+  // delayMicroseconds(10);
   // turnTo('S');
+  // delayMicroseconds(10);
   // straight('S', 160);
+  // delayMicroseconds(10);
   // straight('S', 160);
-  // straight('S', 160);
-  // straight('S', 160);
+  // delayMicroseconds(10);
+  // turnTo('W');
+  // delayMicroseconds(10);
+  // straight('W', 160);
+
+  // // straight('N', 160);
+  // // straight('N', 160);
+  // // turnTo('W');
+  // // turnTo('S');
+  // // straight('S', 160);
+  // // straight('S', 160);
+  // // straight('S', 160);
+  // // straight('S', 160);
   
 
-  while(1);
+  // while(1);
 
   // for(unsigned int i = 0; i < 255; i += 63){
   //   moveLeftMotor(i);

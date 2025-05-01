@@ -29,7 +29,7 @@ boolean checkLeftWall() {
     int16_t leftTime = pulseIn(leftSensor, HIGH);
     int16_t leftDistance = (leftTime - 1000) * 3 / 4;
 
-    if(leftDistance < 100) {
+    if(leftDistance < 80) {
         return true;
     }  
     return false;
@@ -41,7 +41,7 @@ boolean checkRightWall() {
     int16_t rightTime = pulseIn(rightSensor, HIGH);
     int16_t rightDistance = (rightTime - 1000) * 3 / 4;
     
-    if(rightDistance < 100) {
+    if(rightDistance < 80) {
         return true;
     } 
 

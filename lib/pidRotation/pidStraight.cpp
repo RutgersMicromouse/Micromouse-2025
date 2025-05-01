@@ -38,7 +38,7 @@ void straight(char direction, int distance)
             anglekD = 0;
         }
 
-        int numTicks = (100 * distance) / (DIA * PI); //Num ticks that we need to travel
+        int numTicks = (102 * distance) / (DIA * PI); //Num ticks that we need to travel
 
         switch (direction)
         {
@@ -106,7 +106,7 @@ void straight(char direction, int distance)
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
 
-            leftMotorSpeed *= 0.97; //Slight adjusment of left motorspeed
+            rightMotorSpeed *= 1.1; //Slight adjusment of left motorspeed
 
 
             if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
@@ -137,7 +137,7 @@ void straight(char direction, int distance)
 
             currentAverageError = (currentLeftError + currentRightError)/2;
 
-            Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
+          //  Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
 
         }
 

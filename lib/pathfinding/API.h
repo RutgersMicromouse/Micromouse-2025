@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include "../lib/Motors/Motors.h"
-#include "../lib/DistanceSensors/distanceSensors.h"
-#include "../lib/IMU/IMU.h"
-#include "../lib/pidRotation/pidRotate.h"
-#include "../lib/pidRotation/pidStraight.h"
+#include "../Motors/Motors.h"
+#include "../DistanceSensors/distanceSensors.h"
+#include "../IMU/IMU.h"
+#include "../pidRotation/pidRotate.h"
+#include "../pidRotation/pidStraight.h"
 
 class API {
 
@@ -18,12 +18,12 @@ public:
     static bool wallRight();
     static bool wallLeft();
 
-    static void moveForward(int distance = 160);
-    static void moveForwardHalf(int numHalfSteps = 80);
-    static void turnRight();
-    static void turnLeft();
-    static void turnRight45();
-    static void turnLeft45();
+    static void moveForward(int distance = 1, uint8_t direction = 255);
+    static void moveForwardHalf(int distance = 1, uint8_t direction = 255);
+    static void turnRight(uint8_t direction);
+    static void turnLeft(uint8_t direction);
+    static void turnRight45(uint8_t direction);
+    static void turnLeft45(uint8_t direction);
 
     static void setWall(int x, int y, char direction);
     static void clearWall(int x, int y, char direction);

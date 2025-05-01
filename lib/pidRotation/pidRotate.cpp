@@ -39,7 +39,7 @@ void turnTo(char direction) {
     double sampleAngle = angle();
     
     while (1) {
-        if(leftMotorSpeed > 15 || abs(rightMotorSpeed) > 15) {
+        if(leftMotorSpeed > 46 || abs(rightMotorSpeed) > 46) {
             startTime = micros();
         }
         
@@ -69,7 +69,7 @@ void turnTo(char direction) {
         rightMotorSpeed = -ki*totalError + kp * -error;
         previousTime = totalTime;
         
-        Serial.printf("Left Motor Speed: %lf\t Right Motor Speed: %lf\t Error: %lf\n", leftMotorSpeed, rightMotorSpeed, error);
+       // Serial.printf("Left Motor Speed: %lf\t Right Motor Speed: %lf\t Error: %lf\n", leftMotorSpeed, rightMotorSpeed, error);
         // Serial.printf("Total error: %lf\n", totalError);
         
         if (leftMotorSpeed > 100) {
