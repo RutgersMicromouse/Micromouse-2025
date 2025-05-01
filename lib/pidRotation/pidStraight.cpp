@@ -24,8 +24,8 @@ void straight(char direction, int distance)
         if(distance == 160) {
             encoderkP = 0.9;
             encoderkD = 0.1;
-            anglekP = 1.5;
-            anglekD = 2.1; 
+            anglekP = 2;
+            anglekD = 2.3; 
         } else if(distance > 160){
             encoderkP = 1.5;
             encoderkD = 5;
@@ -38,7 +38,7 @@ void straight(char direction, int distance)
             anglekD = 0;
         }
 
-        int numTicks = (98 * distance) / (DIA * PI); //Num ticks that we need to travel
+        int numTicks = (100 * distance) / (DIA * PI); //Num ticks that we need to travel
 
         switch (direction)
         {
@@ -106,7 +106,7 @@ void straight(char direction, int distance)
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
 
-            leftMotorSpeed *= 1.03; //Slight adjusment of left motorspeed
+            leftMotorSpeed *= 0.97; //Slight adjusment of left motorspeed
 
 
             if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
@@ -145,5 +145,4 @@ void straight(char direction, int distance)
         moveRightMotor(0);
         Serial.println("Done");
     }
-
 

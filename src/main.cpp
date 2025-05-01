@@ -16,16 +16,34 @@ void setup() {
 
 void loop() {
 
+  // straight('N', 65);
+  delayMicroseconds(10);
   straight('N', 160);
+  delayMicroseconds(10);
   straight('N', 160);
-  straight('N', 160);
-  straight('N', 160);
+  delayMicroseconds(10);
   turnTo('W');
+  delayMicroseconds(10);
+  straight('W', 160);
+  delayMicroseconds(10);
   turnTo('S');
+  delayMicroseconds(10);
   straight('S', 160);
+  delayMicroseconds(10);
   straight('S', 160);
-  straight('S', 160);
-  straight('S', 160);
+  delayMicroseconds(10);
+  turnTo('W');
+  delayMicroseconds(10);
+  straight('W', 160);
+
+  // straight('N', 160);
+  // straight('N', 160);
+  // turnTo('W');
+  // turnTo('S');
+  // straight('S', 160);
+  // straight('S', 160);
+  // straight('S', 160);
+  // straight('S', 160);
   
 
   while(1);

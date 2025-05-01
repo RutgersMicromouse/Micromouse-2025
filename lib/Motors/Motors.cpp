@@ -37,7 +37,30 @@ void setupMotors(){
   Serial.println("Motors are setup!");
 }
 
+static char Lcurrentdirection = '\0';
 
+// static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
+//   if(direction == 'N') { //moving forward relative to front of robot
+
+//     if(Lcurrentdirection != direction) {
+//       digitalWrite(AIN1_LEFTMOT, HIGH);
+//       digitalWrite(AIN2_LEFTMOT, LOW);
+//       Lcurrentdirection = direction;
+//     }
+
+//     analogWrite(AIN1_LEFTMOT, leftPWN);
+
+//   } else {
+//     if(Lcurrentdirection != direction) {
+//       digitalWrite(AIN1_LEFTMOT, LOW);
+//       digitalWrite(AIN2_LEFTMOT, HIGH);
+//       Lcurrentdirection = direction;
+//     }
+
+//     analogWrite(AIN1_LEFTMOT, leftPWN);
+//   }
+  
+// }
 
 static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
   if(direction == 'N') { //moving forward relative to front of robot
@@ -50,6 +73,8 @@ static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
     analogWrite(AIN2_LEFTMOT, leftPWN);
   }
 }
+
+
 void moveLeftMotor(int PWM) {
   if(PWM >= 0){
     actualMoveLeftMotor(PWM,'N');
@@ -58,6 +83,30 @@ void moveLeftMotor(int PWM) {
     actualMoveLeftMotor(-PWM,'X');
   }
 }
+
+// static char Rcurrentdirection = '\0';
+
+// static void actualMoveRightMotor(uint8_t rightPWM, char direction) {
+//   if(direction == 'N') { //moving forward relative to front of robot
+
+//     if (direction != Rcurrentdirection){
+//       digitalWrite(BIN1_RIGHTMOT, LOW);
+//       digitalWrite(BIN2_RIGHTMOT, HIGH);
+//       Rcurrentdirection = direction;
+//     }  
+//     analogWrite(BIN2_RIGHTMOT, rightPWM);
+
+//   } else {
+//     if (direction != Rcurrentdirection){
+//       digitalWrite(BIN1_RIGHTMOT, HIGH);
+//       digitalWrite(BIN2_RIGHTMOT, LOW);
+//       Rcurrentdirection = direction;
+//     }
+
+//     analogWrite(BIN1_RIGHTMOT, rightPWM);
+//   }
+
+// }
 
 static void actualMoveRightMotor(uint8_t rightPWM, char direction) {
   if(direction == 'N') { //moving forward relative to front of robot

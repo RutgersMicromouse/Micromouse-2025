@@ -107,4 +107,5 @@ void turnTo(char direction) {
     
     moveLeftMotor(0);
     moveRightMotor(0);
+    delayMicroseconds(500);
 }
