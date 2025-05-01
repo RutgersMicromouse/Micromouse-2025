@@ -133,40 +133,68 @@ void followEdge() {
     return;
   }
 
-  // Access the image data
   uint8_t* image_data = fb->buf;
+  const uint8_t threshold = 128;  // Adjust based on lighting
 
-  // Define the threshold for detecting the edge of the line
-  const uint8_t threshold = 128; // Adjust this value based on your lighting conditions
+  // ---- Intersection Detection (blob analysis) ----
+  int rows[] = { fb->height / 4, fb->height / 2, 3 * fb->height / 4 };
+  int row_blob_counts[3] = {0};
 
-  // Iterate over the middle row of the image to detect the edge
-  int edge_position = -1;
-  for (int x = 0; x < fb->width; x++) {
-    uint8_t gray = image_data[(fb->height / 2) * fb->width + x];
-    if (gray > threshold) {
-      edge_position = x;
-      break;
+  for (int r = 0; r < 3; r++) {
+    int y = rows[r];
+    bool in_blob = false;
+    for (int x = 0; x < fb->width; x++) {
+      uint8_t gray = image_data[y * fb->width + x];
+      if (gray > threshold) {
+        if (!in_blob) {
+          row_blob_counts[r]++;
+          in_blob = true;
+        }
+      } else {
+        in_blob = false;
+      }
     }
   }
 
-  // Adjust the robot's movement based on the position of the edge
-  if (edge_position != -1) {
-    int error = (fb->width / 2) - edge_position; // Calculate the error from the center
-    // Use a simple proportional control to adjust the robot's movement
-    int motor_speed = 10 + error; // Adjust the base speed and gain as needed
-    Serial.printf("Edge position: %d, Error: %d, Motor speed: %d\n", edge_position, error, motor_speed);
+  int total_blobs = row_blob_counts[0] + row_blob_counts[1] + row_blob_counts[2];
+  Serial.printf("Blobs: top=%d, mid=%d, bot=%d, total=%d\n",
+                row_blob_counts[0], row_blob_counts[1], row_blob_counts[2], total_blobs);
 
-    // Add your motor control code here to adjust the robot's movement
-    // For example:
-    setLeftPWM(motor_speed);
-    setRightPWM(-motor_speed);
+  // ---- Intersection decision logic ----
+  if (total_blobs >= 3 || row_blob_counts[1] >= 2) {
+    Serial.println("T-intersection or crossroad detected");
+    // Add logic here to choose direction (left/right/forward) based on path planning
+  } else if (row_blob_counts[0] >= 1 && row_blob_counts[2] >= 1) {
+    Serial.println("Diagonal or complex intersection detected");
+  } else if (row_blob_counts[2] == 1 && row_blob_counts[1] == 0) {
+    Serial.println("Dead end detected");
   } else {
-    Serial.println("Edge not found");
+    // ---- Normal line following ----
+    int edge_position = -1;
+    int y = fb->height / 2; // Middle row
+    for (int x = 0; x < fb->width; x++) {
+      uint8_t gray = image_data[y * fb->width + x];
+      if (gray > threshold) {
+        edge_position = x;
+        break;
+      }
+    }
+
+    if (edge_position != -1) {
+      int error = (fb->width / 2) - edge_position;
+      int motor_speed = 100 + error; // Simple proportional control
+      Serial.printf("Following line - Edge position: %d, Error: %d, Motor speed: %d\n",
+                    edge_position, error, motor_speed);
+
+      // Add your motor control here:
+      setLeftPWM(motor_speed);
+      setRightPWM(-motor_speed);
+    } else {
+      Serial.println("Line not found");
+      // Stop or reverse slightly, depending on your bot's logic
+    }
   }
 
-  // Return the frame buffer back to the driver
   esp_camera_fb_return(fb);
-
-  // Delay before capturing next frame
-  delay(100); // Adjust the delay as needed
+  delay(100);
 }
