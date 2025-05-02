@@ -17,7 +17,6 @@
 static char dirgoal = 'N';
 
 bool wallFront() {
-
     int16_t distance = checkFrontWall();
 
     if(distance < 80) {
@@ -26,11 +25,9 @@ bool wallFront() {
     } else {
         return false;
     }
-
 }
 
 bool wallRight() {
-
     boolean checkRight = checkRightWall();    
 
     if(checkRight) {
@@ -39,7 +36,6 @@ bool wallRight() {
     } else {
         return false;
     }
- 
 }
 
 bool wallLeft() {
@@ -54,21 +50,16 @@ bool wallLeft() {
 }
 
 void moveForward(int distance) {
-
-    distance = distance * blockLength;
-    straight(dirgoal, 160);
-
+    int actualDistance = distance * blockLength;
+    straight(dirgoal, actualDistance);
 }
 
 void moveForwardHalf(int distance) {
- 
     if (distance != 1) {
         //std::cout << distance;
     }
-    distance = distance * blockLength;
-
-    straight(dirgoal, distance);
-
+    int actualDistance = distance * blockLength;
+    straight(dirgoal, actualDistance);
 }
 
 void turnRight() {
@@ -86,15 +77,13 @@ void turnRight() {
             dirgoal = 'N';
             break;
         default:
-            Serial.printf("crash: turn left invalid\n");
+            Serial.printf("crash: turn right invalid\n");
             while(1);
     };
     turnTo(dirgoal);
 }
 
 void turnLeft() {
-    char dirGoal;
-
     switch(dirgoal){
         case 'N':
             dirgoal = 'W';
@@ -112,15 +101,15 @@ void turnLeft() {
             Serial.printf("crash: turn left invalid\n");
             while(1);
     };
-
-    turnTo(dirGoal);
-
+    turnTo(dirgoal);
 }
 
 void turnRight45() {
-
+    // Implementation for turning right by 45 degrees
+    // This is a placeholder - actual implementation depends on your robot's control system
 }
 
 void turnLeft45() {
-
+    // Implementation for turning left by 45 degrees
+    // This is a placeholder - actual implementation depends on your robot's control system
 }
