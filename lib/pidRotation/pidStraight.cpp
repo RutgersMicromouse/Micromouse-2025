@@ -1,148 +1,141 @@
 #include "pidStraight.h"
+#include "pidRotate.h"
 #define DIA 32
 #define PI 3.1415926535897932384626433832795
 
-double minPWM = 75;
-double maxPWM = 175;
-
+double maxSpeed = 175;
+double minSpeed = 100;
 void straight(char direction, int distance)
 {
-        double currentAngle = angle();
-        double targetDirection = 0;
-        double leftMotorSpeed = 0;
-        double rightMotorSpeed = 0;
-       // double kp = 8;
-        double previousTime = millis();
-        double totalTime = millis();
-        double previousAngle = 0;
-        double derivative = angle();
-      //  double kd = 100;
+    // ratio for the angle PID
+    double AKp = 1.0;
+    double AKd = 0.0;
+    // ratios for the Encoder PID
+    double LEKp = 0.85;
+    double LEKd = 0.0;
+    double REKp = 0.85;
+    double REKd = 0.0;
 
-        double encoderkP, encoderkD;
-        double anglekP, anglekD;
-
-        if(distance == 160) {
-            encoderkP = 0.9;
-            encoderkD = 0.1;
-            anglekP = 2;
-            anglekD = 2.3; 
-        } else if(distance > 160){
-            encoderkP = 1.5;
-            encoderkD = 5;
-            anglekP = 0;  
-            anglekD = 0;
-        } else {
-            encoderkP = 1.3;
-            encoderkD = 0.5;
-            anglekP = 0;
-            anglekD = 0;
-        }
-
-        int numTicks = (102 * distance) / (DIA * PI); //Num ticks that we need to travel
-
-        switch (direction)
-        {
-        case 'N':
-            targetDirection = 0;
-            break;
-        case 'S':
-            targetDirection = 180;
-            break;
-        case 'E':
-            targetDirection = 90;
-            break;
-        case 'W':
-            targetDirection = 270;
-            break;
-        }
-
-        encLeft.clearCount();
-        encRight.clearCount();
-
-        int currleft = getLeftEncoder();
-        int currright = getRightEncoder();
-
-        int newLeft = currleft;
-        int newRight = currright;
-
-        int currentLeftError = numTicks - currleft;
-        int currentRightError = numTicks - currright;
-        int previousLeftError = numTicks - currleft;
-        int previousRightError = numTicks - currright;
-
-        int currentAverageError, previousAverageError;
-    
-        double angleError;
-        double leftEncoderDeriv = 0;
-        double rightEncoderDeriv = 0;
-
-        double oldLeftSpeed = 0;
-        double oldRightSpeed = 0;
-
-        int startTime = millis();
-        while (1)
-        {
-            //Angle readings for IMU
-            currentAngle = angle();
-            angleError = targetDirection - currentAngle;
-            totalTime = millis();
-            while(angleError > 180)
-            {
-                angleError -= 360;
-            }
-            while(angleError <= -180)
-            {
-                angleError += 360;
-            }
-        
-            //Calculating derivative
-            derivative = (currentAngle - previousAngle) / (totalTime - previousTime);
-            leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
-            rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
-
-            //Calculating left and right motor speed
-            leftMotorSpeed = (encoderkP * currentLeftError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
-            rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
-            leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
-            rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
-
-            rightMotorSpeed *= 1.1; //Slight adjusment of left motorspeed
-
-
-            if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
-                startTime = millis();
-            }
-
-            if(startTime + 100 < millis()) {
-                moveLeftMotor(0);
-                moveRightMotor(0);
-                break;
-            }
-
-            moveLeftMotor(leftMotorSpeed);
-            moveRightMotor(rightMotorSpeed);
-
-            previousTime = totalTime;
-            previousAngle = currentAngle;
-
-            previousAverageError = currentAverageError;
-        
-            currleft = getLeftEncoder();
-            currright = -1 * getRightEncoder();
-
-            previousLeftError = currentLeftError;
-            previousRightError = currentRightError;
-            currentLeftError = numTicks - currleft;
-            currentRightError = numTicks - currright;
-
-            currentAverageError = (currentLeftError + currentRightError)/2;
-
-          //  Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
-
-        }
-
-        moveLeftMotor(0);
-        moveRightMotor(0);
-        Serial.println("Done");
+    // Angle variables
+    double AngleError = 0.0;
+    double PreviousAngleError = 0.0;
+    double currentAngle = angle();
+    double targetDirection = 0.0;
+    switch (direction)
+    {
+    case 'N':
+        targetDirection = 0;
+        break;
+    case 'S':
+        targetDirection = 180;
+        break;
+    case 'E':
+        targetDirection = 90;
+        break;
+    case 'W':
+        targetDirection = 270;
+        break;
     }
 
+    // encoder values
+    double numTicks = (102 * distance) / (DIA * PI); // Num ticks that we need to travel
+    double EncoderLeftError = numTicks;
+    double EncoderRightError = numTicks;
+
+    // clear the encoder count
+    encLeft.clearCount();
+    encRight.clearCount();
+
+    // final motor speeds
+    double LeftMotorSpeed = 0.0;
+    double RightMotorSpeed = 0.0;
+
+    // time values (for derivative)
+    unsigned long PreviousTime = millis();
+    unsigned long CurrentTime = millis();
+    
+    // Variables for stall detection
+    unsigned long stallStartTime = 0;
+    bool potentialStall = false;
+    double prevLeftSpeed = 0;
+    double prevRightSpeed = 0;
+    const double stallThreshold = 3.0;        // Motor speed difference threshold
+    const unsigned long stallTimeThreshold = 500; // 0.5 seconds in milliseconds
+
+    // Variables for destination check
+    bool isAtDestination = false;
+    const double encoderTolerance = 5.0;      // Consider arrived if within this many ticks
+    
+    double basespeed = 135;
+    while (1)
+    {
+        // retrieve the angle error
+        AngleError = targetDirection - angle(); // figure out the AngleError
+        while (AngleError > 180) {
+            AngleError -= 360;
+        }
+        while (AngleError <= -180) {
+            AngleError += 360;
+        }
+        
+        // Calculate encoder errors
+        EncoderLeftError = numTicks - getLeftEncoder();
+        EncoderRightError = numTicks + getRightEncoder();
+        
+        // Check if we've reached the destination
+        if (EncoderLeftError <= encoderTolerance && EncoderRightError <= encoderTolerance) {
+            Serial.println("Reached destination");
+            break;
+        }
+        
+        // Constrain encoder errors for speed calculation
+        EncoderLeftError = constrain(EncoderLeftError, 0, basespeed);
+        EncoderRightError = constrain(EncoderRightError, 0, basespeed);
+        
+        // Calculate motor speeds
+        LeftMotorSpeed = (LEKp * EncoderLeftError) + (AKp * AngleError);
+        RightMotorSpeed = (REKp * EncoderRightError) - (AKp * AngleError);
+
+        // Constrain speeds to valid range
+        LeftMotorSpeed = constrain(LeftMotorSpeed, 0, maxSpeed);
+        RightMotorSpeed = constrain(RightMotorSpeed, 0, maxSpeed);
+        
+        Serial.printf("left: %lf\tright: %lf\n", LeftMotorSpeed, RightMotorSpeed);
+        
+        // Check for stall condition
+        if (fabs(LeftMotorSpeed - prevLeftSpeed) < stallThreshold && 
+            fabs(RightMotorSpeed - prevRightSpeed) < stallThreshold) {
+            if (!potentialStall) {
+                // First time detected potential stall
+                stallStartTime = millis();
+                potentialStall = true;
+                Serial.println("Potential stall detected");
+            } else if ((millis() - stallStartTime) > stallTimeThreshold) {
+                // Stall condition has persisted for enough time
+                Serial.println("Stall confirmed - terminating movement");
+                break;
+            }
+        } else {
+            // Reset stall detection
+            potentialStall = false;
+        }
+
+        // Update previous speeds for next iteration
+        prevLeftSpeed = LeftMotorSpeed;
+        prevRightSpeed = RightMotorSpeed;
+        
+        // Apply motor speeds
+        moveLeftMotor(LeftMotorSpeed);
+        moveRightMotor(RightMotorSpeed * 1.1);
+        
+        // Update time for next iteration
+        PreviousTime = CurrentTime;
+        CurrentTime = millis();
+    }
+    
+    // Stop motors
+    moveLeftMotor(0);
+    moveRightMotor(0);
+    delay(100);
+    turnTo(direction);
+}

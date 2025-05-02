@@ -14,7 +14,9 @@ void setup() {
   setupIMU();
   Wire.setClock(40000);
   delay(500);
-  // initialize_maze(0,0,true); 
+  // turnTo('W');
+  // straight('N',160);
+  // while(1);
   initialize_maze(3,3,true);
   floodfill();
   // initialize_maze(1,1,false);
