@@ -30,10 +30,9 @@ void IRAM_ATTR updateLeftEncoder() {
 }
 
 void setLeftPWM(int PWM) {
-    mc.setSpeedNow(1, -PWM);
+    mc.setSpeed(1, -PWM);
 }
 
 void setRightPWM(int PWM) {
-    mc.setSpeedNow(2, -PWM);
+    mc.setSpeed(2, -PWM);
 }
-

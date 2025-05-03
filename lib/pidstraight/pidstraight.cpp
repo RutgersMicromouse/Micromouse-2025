@@ -4,7 +4,7 @@ double Kp_dist = 0.35;
 double Ki_dist = 0;
 double Kd_dist = 0;
 //PID for angle offset
-double Kp_angle = 2;
+double Kp_angle = 3;
 double Ki_angle = 0;
 double Kd_angle = 0;
 
@@ -15,6 +15,7 @@ void pidForward(double distance) {
     Serial.print("Hello pidForward! ");
     Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
     double goal_distance = TICKS_PER_ROTATION * distance /( WHEEL_DIAM * PI); // Converts mm -> encoder ticks
+    goal_distance *= 1.10;
     encLeft.write(0); encRight.write(0); // Reset encoder position
 
     // Find the closest world angle axis
@@ -43,8 +44,11 @@ void pidForward(double distance) {
     // All of the variables we need for PID
     double t_old = micros();
 
-    double error_dist = goal_distance; double error_int_dist; double error_deriv_dist;
-    double error_dist_old = error_dist; 
+    double error_dist_left = goal_distance; double error_int_dist_left; double error_deriv_dist_left;
+    double error_dist_left_old = error_dist_left;
+
+    double error_dist_right = goal_distance; double error_int_dist_right; double error_deriv_dist_right;
+    double error_dist_right_old = error_dist_right; 
     
     double error_angle = goal_angle - angle();
     // angle wrapping
@@ -54,7 +58,8 @@ void pidForward(double distance) {
     double error_int_angle; double error_deriv_angle;
     double error_angle_old = error_angle;
     
-    double distOut;
+    double distOutLeft;
+    double distOutRight;
     double angleOut;
 
     // sampling to check for motor stalling
@@ -67,10 +72,10 @@ void pidForward(double distance) {
     
         // Guard Clauses:
         // 1. At the destination
-        if (abs(error_dist) <= 20) { setRightPWM(0); setLeftPWM(0); return; }
+        if (abs(error_dist_left) <= 3 && abs(error_dist_right) <= 3) { setRightPWM(0); setLeftPWM(0); return; }
         
-        // 2. Stall Condition, 0.5 seconds
-        if (micros() > sampleTime + 5e5){
+        // 2. Stall Condition, 0.1 second
+        if (micros() > sampleTime + 1e5){
             if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) { setRightPWM(0); setLeftPWM(0); return; }
             
             // Update stall sampler
@@ -83,28 +88,33 @@ void pidForward(double distance) {
         if(front() < 25)          { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
-        error_dist = goal_distance - ((encLeft.read() + encRight.read())/2); 
+        error_dist_left = goal_distance - encLeft.read(); 
+        error_dist_right = goal_distance - encRight.read(); 
         error_angle = goal_angle - angle();
         // angle wrapping
         if (error_angle > 180) error_angle -= 360;
         if (error_angle < -180) error_angle += 360;
         
         // I error
-        error_int_dist += error_dist * (micros() - t_old);
+        error_int_dist_left += error_dist_left * (micros() - t_old);
+        error_int_dist_right += error_dist_right * (micros() - t_old);
         error_int_angle += error_angle * (micros() - t_old);
         
         // D error
-        error_deriv_dist = (error_dist - error_dist_old)/(micros() - t_old);
+        error_deriv_dist_left = (error_dist_left - error_dist_left_old)/(micros() - t_old);
+        error_deriv_dist_right = (error_dist_right - error_dist_right_old)/(micros() - t_old);
         error_deriv_angle = (error_angle - error_angle_old)/(micros() - t_old);
 
-        distOut = Kp_dist * error_dist + Ki_dist * error_int_dist + Kd_dist * error_deriv_dist;
+        distOutLeft = Kp_dist * error_dist_left + Ki_dist * error_int_dist_left + Kd_dist * error_deriv_dist_left;
+        distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
-        setLeftPWM(distOut - angleOut); setRightPWM(distOut + angleOut); 
+        Serial.printf("angleOut %f \n", angleOut);
+        setRightPWM(distOutRight - angleOut); delay(10); setLeftPWM(distOutLeft + angleOut);
 
         Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 
         // update error_dist_old, error_angle_old, and t_old
-        error_dist_old = error_dist; error_angle_old = error_angle; t_old = micros();
+        error_dist_left_old = error_dist_left; error_dist_right_old = error_dist_right; error_angle_old = error_angle; t_old = micros();
     }
 }
 
@@ -159,8 +169,8 @@ void pidForwardLeftWallFollow() {
         // 1. Take all left walls
         if (!leftWall()) { setRightPWM(0); setLeftPWM(0); return; }
         
-        // 2. Stall Condition, 0.5 seconds
-        if (micros() > sampleTime + 50e5){
+        // 2. Stall Condition, 0.1 second
+        if (micros() > sampleTime + 1e5){
             if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) { setRightPWM(0); setLeftPWM(0); return; }
             
             // Update stall sampler
@@ -185,7 +195,7 @@ void pidForwardLeftWallFollow() {
         error_deriv_angle = (error_angle - error_angle_old)/(micros() - t_old);
 
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
-        setLeftPWM(400 - angleOut); setRightPWM(400 + angleOut); 
+        setLeftPWM(400 + angleOut); setRightPWM(400 - angleOut); 
 
 
         // update error_angle_old, and t_old

@@ -2,7 +2,7 @@
 
 #include <string>
 
-//#define SIM
+// #define SIM
 #define REAL
 
 // define physical libraries if real
@@ -13,6 +13,8 @@
 #include "pidstraight.h"
 #include "imu.h"
 #include "ioexpander.h"
+double block_length = 180;
+
 #endif
 
 class API {
@@ -24,16 +26,17 @@ public:
     static bool wallRight();
     static bool wallLeft();
 
-    static void moveForward(int distance = 1);
-    static void moveForwardHalf(double numHalfSteps = 1);
     static void turnRight();
     static void turnLeft();
+    static void moveForward(int distance = 1);
+    static void moveForwardHalf(double numHalfSteps = 1);
 
 
 // define simulator functions if sim
 #ifdef SIM 
     static void turnRight45();
     static void turnLeft45();
+
     static int mazeWidth();
     static int mazeHeight();
     static void setWall(int x, int y, char direction);

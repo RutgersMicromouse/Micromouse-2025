@@ -42,13 +42,10 @@ void initialize() {
 
 
 #ifdef REAL
-    // read from pins, floating voltages are pulled down to GND if 3.3V isn't is applied
-	bool memory_switch = isLoad();
-
     EEPROM.begin(EEPROM_SIZE);
 
     // if switch is on, load the maze from EEPROM
-    if(memory_switch) {
+    if(isLoad()) {
         loadMazeFromEEPROM(maze);
         loadWallsFromEEPROM(walls);
         Serial.println("loaded");
@@ -94,9 +91,9 @@ void saveMazeToEEPROM(char maze[N][N]) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             EEPROM.write(i * N + j, maze[i][j]);
-	    EEPROM.commit();
-        }
+	    }
     }
+	EEPROM.commit(); // a full commitment's what I'm thinking of
 }
 
 void loadMazeFromEEPROM(char maze[N][N]) {
@@ -112,10 +109,10 @@ void saveWallsToEEPROM(openCells walls[N][N]) {
         for (int j = 0; j < N; j++) {
             int index = i * N + j + 256;
             EEPROM.write(index, walls[i][j].openN | (walls[i][j].openS << 1) | (walls[i][j].openE << 2) | (walls[i][j].openW << 3));
-	    EEPROM.commit();
         }
-        }
-    }
+	}
+	EEPROM.commit(); // a full commitment's what I'm thinking of
+}
 
 void loadWallsFromEEPROM(openCells walls[N][N]) {
     for (int i = 0; i < N; i++) {
@@ -641,7 +638,7 @@ void runMaze(char goal) {
 	}
 
 #ifdef REAL
-	// wait for button push for storing maze info into EEPROM
+	// wait for dip switch for storing maze info into EEPROM
 	while(1) {
 		delay(300);
 
@@ -732,6 +729,11 @@ void speedrun() {
 	//S = -y
 	//E = +x
 	//W = -x
+
+#ifdef REAL
+	
+#endif
+
 
 	// 1 means wall
 	// 0 means no wall

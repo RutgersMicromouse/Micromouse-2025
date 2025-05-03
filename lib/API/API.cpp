@@ -3,13 +3,14 @@
 #include <cstdlib>
 #include <iostream>
 
-double block_length = 180;
-// TODO: Add an ifdef REAL to define real functions
 #ifdef REAL
 bool API::wallFront() {
     double dist = front();
-    if (dist < 100){return true;}
-    else {return false;}
+    if (dist < 50) {
+        return true;
+    }
+
+    return false;
 }
 
 bool API::wallRight() {
@@ -187,4 +188,3 @@ void API::ackReset() {
     std::cin >> ack;
 }
 #endif
-
