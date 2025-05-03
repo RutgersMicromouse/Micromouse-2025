@@ -1,4 +1,5 @@
 #include "Flood.h"
+
 #include <iostream>
 
 using namespace std;
@@ -23,13 +24,14 @@ char maze[N][N] =
  {13, 12, 11, 10,  9, 8, 7, 6, 6, 7, 8,  9, 10, 11, 12, 13},  
  {14, 13, 12, 11, 10, 9, 8, 7, 7, 8, 9, 10, 11, 12, 13, 14}};
 
-std::stack<configuration> cellStack;
+// std::stack<configuration> cellStack;
 openCells walls[N][N];
 configuration currentCfg;
 configuration poppedCfg;
 
 //std::stack<configuration> deadendStack;
 std::stack<configuration> pathTaken;
+StaticStack<configuration, 64> cellStack;
 
 
 #define EEPROM_SIZE 512
@@ -538,17 +540,23 @@ void visualizeWalls(int i, int j, openCells cell) {
 #ifdef REAL
 void mazePrintout() {
 	// printout maze
-	for(int j = 4; j >= 0; j--) {
-		for(int i = 0; i < 5; i++) {
+	for(int j = 15; j >= 0; j--) {
+		for(int i = 0; i < 16; i++) {
 
 			if(currentCfg.x == i && currentCfg.y == j) {
+				
 				Serial.print("[");
-				Serial.print(maze[i][j]);
+				Serial.print(static_cast<int>(maze[i][j]));
 				Serial.print("], ");
 			} else {
-				Serial.print(" ");
-				Serial.print(maze[i][j]);
-				Serial.print(", ");
+				if(maze[i][j] < 10) {
+					Serial.print(" ");
+					Serial.print(static_cast<int>(maze[i][j]));
+					Serial.print(", ");	
+				} else {
+					Serial.print(static_cast<int>(maze[i][j]));
+					Serial.print(", ");	
+				}
 			}
 		}
 		Serial.println();
@@ -561,6 +569,8 @@ void mazePrintout() {
 
 
 void runMaze(char goal) {
+	mazePrintout();
+
 	int loopCondition = 1;
 	while(loopCondition) {
 		pathTaken.push(currentCfg);
@@ -653,6 +663,8 @@ void runMaze(char goal) {
 			digitalWrite(LED_BUILTIN, LOW);
 			delay(200);
 			digitalWrite(LED_BUILTIN, HIGH);
+			mazePrintout();
+			return;
 		}
 	}
 #endif
@@ -702,6 +714,11 @@ void backTrack() {
 	currentCfg.dir = 'N';
 }
 
+// ✅ Solution: Move the arrays to global scope or allocate on the heap
+// 🔁 Option A: Move them to global scope (best for simplicity)
+// That way, they’re stored in .bss or .data section, not on the stack.
+Node highResMazeNode[33][33];
+
 // A* diagonal, continuous idea
 // Break maze into 33x33, 16 cells + 15 inbetween cells, also + 2 inbetween cells for the walls
 // Move from each half cell to half cell using Chebyshev distance (this is a searching issue)
@@ -730,10 +747,6 @@ void speedrun() {
 	//E = +x
 	//W = -x
 
-#ifdef REAL
-	
-#endif
-
 
 	// 1 means wall
 	// 0 means no wall
@@ -760,7 +773,7 @@ void speedrun() {
 				highResMaze[highResX - 1][highResY-1] = true; highResMaze[highResX - 1][highResY+1] = true;
 			}
 
-			// temporary measure to not attempt to solve with unvisited cells
+			// do not attempt to solve with unvisited cells
 			if(!cell.visited) {
 				highResMaze[highResX-1][highResY-1] = true; highResMaze[highResX][highResY-1] = true; highResMaze[highResX+1][highResY-1] = true;
 				highResMaze[highResX-1][highResY] = true; highResMaze[highResX][highResY] = true; highResMaze[highResX+1][highResY] = true;
@@ -781,7 +794,9 @@ void speedrun() {
 
 
 	// straight line A*
-	Node highResMazeNode[33][33];
+	// Moved to outside function to not kill the stack
+	
+	// Node highResMazeNode[33][33];
 
 	// update nodes, don't need to do outer walls
 	for (int i = 1; i < 33-1; i++) {
@@ -964,6 +979,12 @@ void speedrun() {
 
 					// finally move forward
 					commands.push_back({'F', 1});
+
+#ifdef REAL
+					// extra distance for diagonals
+					if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
+						commands.back().second += 0.414213562373;}
+#endif
 				}
 			}
 		

@@ -1,5 +1,3 @@
-#ifndef FLOOD_H
-#define FLOOD_H
 #pragma once
 
 
@@ -28,12 +26,56 @@ struct configuration {
     char dir;
 };
 
+
+
+
+template <typename T, size_t MAX_SIZE>
+class StaticStack {
+public:
+    bool push(const T& value) {
+        if (size_ >= MAX_SIZE) return false;
+        data_[size_++] = value;
+        return true;
+    }
+
+    bool pop() {
+        if (size_ == 0) return false;
+        --size_;
+        return true;
+    }
+
+    T& top() {
+        return data_[size_ - 1];
+    }
+
+    const T& top() const {
+        return data_[size_ - 1];
+    }
+
+    bool empty() const {
+        return size_ == 0;
+    }
+
+    size_t size() const {
+        return size_;
+    }
+
+private:
+    T data_[MAX_SIZE];
+    size_t size_ = 0;
+};
+
+
+
+
 // How to make a global variable
 // https://edisciplinas.usp.br/pluginfile.php/5453726/mod_resource/content/0/Extern%20Global%20Variable.pdf
 
 // How to use the stl stack
 // https://cplusplus.com/reference/stack/stack/
-extern std::stack<configuration> cellStack;
+// extern std::stack<configuration> cellStack;
+extern StaticStack<configuration, 64> cellStack;
+
 extern configuration currentCfg; // global struct for keeping track of current pos/orientation
 extern configuration poppedCfg; // global struct for popped cell cause why not
 
@@ -145,5 +187,3 @@ static float calculateH(int x, int y) {
 	return H;
 
 }
-
-#endif
