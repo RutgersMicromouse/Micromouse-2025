@@ -4,9 +4,11 @@
 #include <iostream>
 
 #ifdef REAL
+double block_length = 180;
+
 bool API::wallFront() {
     double dist = front();
-    if (dist < 50) {
+    if (dist < 90) {
         return true;
     }
 
@@ -29,22 +31,60 @@ void API::moveForwardHalf(double numHalfSteps) {
     pidForward(numHalfSteps * block_length/2);
 }
 
+// void API::turnRight() {
+//     double currentAngle = angle();
+//     if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
+//     else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
+//     else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
+//     else {currentAngle = 0;}
+//     turnTo(currentAngle+90);
+// }
+
+// void API::turnLeft() {
+//     double currentAngle = angle();
+//     if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
+//     else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
+//     else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
+//     else {currentAngle = 0;}
+//     turnTo(currentAngle-90);
+// }
+
 void API::turnRight() {
+    double angle_goal;
+
     double currentAngle = angle();
-    if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
-    else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
-    else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
-    else {currentAngle = 0;}
-    turnTo(currentAngle+90);
+    if(currentAngle < 45 || currentAngle > 315) {
+        angle_goal = 90;
+    } else if(currentAngle > 45 && currentAngle < 135) {
+        angle_goal = 180;
+    } else if(currentAngle > 135 && currentAngle < 225) {
+        angle_goal = 270;
+    } else {
+        angle_goal = 0;
+    }
+
+    turnTo(angle_goal); //right 90 based on current orientation
+    // delay(200);
+    return;
 }
 
 void API::turnLeft() {
+    double angle_goal;
+
     double currentAngle = angle();
-    if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
-    else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
-    else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
-    else {currentAngle = 0;}
-    turnTo(currentAngle-90);
+    if(currentAngle < 45 || currentAngle > 315) {
+        angle_goal = 270;
+    } else if(currentAngle > 45 && currentAngle < 135) {
+        angle_goal = 0;
+    } else if(currentAngle > 135 && currentAngle < 225) {
+        angle_goal = 90;
+    } else {
+        angle_goal = 180;
+    }
+
+    turnTo(angle_goal); //left 90 based on current orientation
+    // delay(200);
+    return;
 }
 
 

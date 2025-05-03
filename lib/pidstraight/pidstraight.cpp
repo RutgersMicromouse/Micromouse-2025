@@ -13,7 +13,7 @@ double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 // Distance forward in mm
 void pidForward(double distance) {
     Serial.print("Hello pidForward! ");
-    Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
+    // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
     double goal_distance = TICKS_PER_ROTATION * distance /( WHEEL_DIAM * PI); // Converts mm -> encoder ticks
     goal_distance *= 1.10;
     encLeft.write(0); encRight.write(0); // Reset encoder position
@@ -108,10 +108,10 @@ void pidForward(double distance) {
         distOutLeft = Kp_dist * error_dist_left + Ki_dist * error_int_dist_left + Kd_dist * error_deriv_dist_left;
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
-        Serial.printf("angleOut %f \n", angleOut);
+        // Serial.printf("angleOut %f \n", angleOut);
         setRightPWM(distOutRight - angleOut); delay(10); setLeftPWM(distOutLeft + angleOut);
 
-        Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
+        // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 
         // update error_dist_old, error_angle_old, and t_old
         error_dist_left_old = error_dist_left; error_dist_right_old = error_dist_right; error_angle_old = error_angle; t_old = micros();

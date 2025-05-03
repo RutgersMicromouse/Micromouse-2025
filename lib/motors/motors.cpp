@@ -1,7 +1,7 @@
 #include "motors.h"
 
 MotoronI2C mc;
-// Motor default address: 16
+// Motor default address: 16, 0x10
 // https://www.pololu.com/docs/0J84/3.5
 
 Encoder encLeft(1,2);

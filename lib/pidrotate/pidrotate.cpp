@@ -40,12 +40,14 @@ void turnTo(double goal_angle) {
            sampleTime = micros();
            sampleRight = encRight.read();
            sampleLeft = encLeft.read();
+           Serial.printf("Angle error: %f\n", error);
+
         }
         //3. Spins for 5s (maybe?)
         // if (angl == 0 && micros() > sampleTime + 1e6) { setRightPWM(0); setLeftPWM(0); return; } // IMU error
         //End Guard Clauses
 
-        Serial.println("Hello error loop!");
+        // Serial.println("Hello error loop!");
         error = goal_angle - angle();
         if (error < -180.0) {error += 360;} else if (error > 180) {error -= 360;}
         error_int = error * (micros() - t_old);
@@ -57,6 +59,6 @@ void turnTo(double goal_angle) {
         // update error_angle_old, and t_old
         error_old = error; t_old = micros();
 
-        Serial.printf("Angle error: %f\n", error);
+        // Serial.printf("Angle error: %f\n", error);
     }
 }

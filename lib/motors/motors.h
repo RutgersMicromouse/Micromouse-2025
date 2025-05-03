@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Motoron.h>
+// Motor default address: 16, 0x10
+
 #define ENCODER_DO_NOT_USE_INTERRUPTS
 #include <Encoder.h>
 

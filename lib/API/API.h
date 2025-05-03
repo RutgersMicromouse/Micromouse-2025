@@ -13,15 +13,12 @@
 #include "pidstraight.h"
 #include "imu.h"
 #include "ioexpander.h"
-double block_length = 180;
 
 #endif
 
 class API {
 
 public:
-
-
     static bool wallFront();
     static bool wallRight();
     static bool wallLeft();
