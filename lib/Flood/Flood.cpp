@@ -42,15 +42,13 @@ void initialize() {
 
 
 #ifdef REAL
-    // TODO: switch to IO expander 
     // read from pins, floating voltages are pulled down to GND if 3.3V isn't is applied
-    pinMode(memory_button, INPUT_PULLDOWN);
-    pinMode(memory_switch, INPUT_PULLDOWN);
+	bool memory_switch = isLoad();
 
     EEPROM.begin(EEPROM_SIZE);
 
     // if switch is on, load the maze from EEPROM
-    if(digitalRead(memory_switch)) {
+    if(memory_switch) {
         loadMazeFromEEPROM(maze);
         loadWallsFromEEPROM(walls);
         Serial.println("loaded");
@@ -118,7 +116,6 @@ void saveWallsToEEPROM(openCells walls[N][N]) {
         }
         }
     }
-}
 
 void loadWallsFromEEPROM(openCells walls[N][N]) {
     for (int i = 0; i < N; i++) {
@@ -648,9 +645,7 @@ void runMaze(char goal) {
 	while(1) {
 		delay(300);
 
-// TODO: replace with IO expander
-
-		if(digitalRead(memory_button)) {
+		if (isSaving()) {
 			saveMazeToEEPROM(maze);
 			saveWallsToEEPROM(walls);
 			Serial.println("saved");
@@ -908,15 +903,17 @@ void speedrun() {
 				
 				// if nextNode heads in the same direction, go forward
 				if (nextNodeDirection.first == currNodeDirection.first && nextNodeDirection.second == currNodeDirection.second) {
-					
-					// TODO, on real bot, add the euclidean distance of a diagonal (which should be slighly further than a half block)
 
 					// if current command is to go straight and previous command is to go straight, combine them
 					if (!commands.empty() && commands.back().first == 'F') {
 						commands.back().second += 1;
+						if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
+							commands.back().second += 0.414213562373;}
 					} else {
 					// for case at beginning where it's same direction but no straight command, append it
 						commands.push_back({'F', 1.0});
+						if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
+							commands.back().second += 0.414213562373;}
 					}
 
 				} else {
@@ -960,7 +957,7 @@ void speedrun() {
 
 #ifdef REAL
 					// on real robot, turn to absolute orientation
-					commands.push_back({'T', turnAmount});
+					commands.push_back({'T', directionAngles[nextNodeDirection]});
 #endif
 
 					// finally move forward
@@ -977,6 +974,7 @@ void speedrun() {
 					case 'F':
 						API::moveForwardHalf(static_cast<int>(command.second));
 						break;
+#ifdef SIM
 					case 'L':
 						if (command.second == 45) { API::turnLeft45();
 						} else if (command.second == 90) { API::turnLeft(); }
@@ -985,9 +983,10 @@ void speedrun() {
 						if (command.second == 45) { API::turnRight45();
 						} else if (command.second == 90) { API::turnRight(); }
 						break;
+#endif
 					case 'T':
 						// turn to absolute orientation on real robot instead of relative
-						// TODO
+						turnTo(command.second);
 						break;
 					default:
 						std::cerr << "no caseoh" << std::endl;

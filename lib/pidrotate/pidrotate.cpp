@@ -32,8 +32,8 @@ void turnTo(double goal_angle) {
         // 1. At the destination angle
         if (abs(error) <= 1.0) { setRightPWM(0); setLeftPWM(0); return; }
         
-        // 2. Stall Condition
-        if (micros() > sampleTime + 5e5){
+        // 2. Stall Condition, 0.1 second
+        if (micros() > sampleTime + 1e5){
            if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) { setRightPWM(0); setLeftPWM(0); return; }
 
            // Update stall sampler

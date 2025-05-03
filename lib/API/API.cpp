@@ -3,9 +3,51 @@
 #include <cstdlib>
 #include <iostream>
 
-
+double block_length = 180;
 // TODO: Add an ifdef REAL to define real functions
+#ifdef REAL
+bool API::wallFront() {
+    double dist = front();
+    if (dist < 100){return true;}
+    else {return false;}
+}
 
+bool API::wallRight() {
+    return rightWall();
+}
+
+bool API::wallLeft() {
+    return leftWall();
+}
+
+void API::moveForward(int distance) {
+    pidForward(distance * block_length);
+}
+
+void API::moveForwardHalf(double numHalfSteps) {
+    pidForward(numHalfSteps * block_length/2);
+}
+
+void API::turnRight() {
+    double currentAngle = angle();
+    if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
+    else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
+    else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
+    else {currentAngle = 0;}
+    turnTo(currentAngle+90);
+}
+
+void API::turnLeft() {
+    double currentAngle = angle();
+    if (currentAngle > 45 && currentAngle > 135) {currentAngle = 90;}
+    else if (currentAngle > 135 && currentAngle < 225) {currentAngle = 180;}
+    else if (currentAngle > 225 && currentAngle < 315) {currentAngle = 270;}
+    else {currentAngle = 0;}
+    turnTo(currentAngle-90);
+}
+
+
+#endif
 
 #ifdef SIM
 bool API::wallFront() {

@@ -64,6 +64,7 @@ void pidForward(double distance) {
     
     
     while (true) {
+    
         // Guard Clauses:
         // 1. At the destination
         if (abs(error_dist) <= 20) { setRightPWM(0); setLeftPWM(0); return; }

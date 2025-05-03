@@ -11,9 +11,6 @@
 #ifdef REAL
 #include <EEPROM.h>
 
-#define memory_button 15
-#define memory_switch 20
-
 #endif
 
 
