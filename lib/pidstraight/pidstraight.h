@@ -9,6 +9,7 @@
 #include "imu.h"
 #include "motors.h"
 #include "frontdist.h"
+#include "ioexpander.h"
 
 // use PID to drive forward in mm
 void pidForward(double distance);

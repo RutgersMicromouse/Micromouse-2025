@@ -11,8 +11,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Wire.begin();
-  Wire.setClock(50000); // use 400 kHz I2C
-  // Slowed 12C clock speed for the IMU to work
+  Wire.setClock(20000); // use 400 kHz I2C
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // turns the builtin LED on (active low)
 
@@ -20,29 +19,48 @@ void setup() {
   tofSetup();
   delay(500);
   motorSetup();
-  delay(5000);
   Serial.println("Hello setup!");
 
-  // Move to center of cell off of back wall alignment
-  turnTo(180);
-
   // Switch options:  
-  if(isFirefighter()) {
-    Serial.println("Firefighter mode");
-    init_GPIO();
-    firefighterSetup();
-    firefighterLoop();
-  }
+  // if(isFirefighter()) {
+  //   Serial.println("Firefighter mode");
+  //   init_GPIO();
+  //   firefighterSetup();
+  //   firefighterLoop();
+  // }
 
+  pidForward(180);
+  // pidForward(180);
+  // pidForward(180);
 
+  // turnTo(270);
+
+  // pidForward(180);
+  // pidForward(180);
+  
+  // turnTo(180);
+  
+  // pidForward(180);
+  // pidForward(180);
+  
+  // turnTo(90);
+  
+  // pidForward(180);
+  
+  // turnTo(0);
+  
+  // pidForward(180);
+  
 }
 
 void loop() {
   delay(2000);
-  //Serial.println("Hello main loop!");
+  Serial.println("Hello main loop!");
   Serial.print(encLeft.read());
   Serial.print(" N ");
   Serial.println(encRight.read());
+
+  // Serial.println(front());
 
 
 }
