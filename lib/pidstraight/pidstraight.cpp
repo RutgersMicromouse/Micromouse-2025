@@ -180,7 +180,7 @@ void pidForwardLeftWallFollow() {
         }
 
         // 3. Too close to the front wall
-        if(front() < 100)          { setRightPWM(0); setLeftPWM(0); return; }
+        if(front() < 25)          { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
         error_angle = goal_angle - angle();

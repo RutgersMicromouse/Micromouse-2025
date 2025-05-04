@@ -40,24 +40,24 @@ void setup() {
 
   
   // // // Switch options:
-  // if(isSpeedrun()) {
-  //   Serial.println("Lightning McQueen mode");
-  //   initialize(); // load switch should also be on
-  //   speedrun();
-  //   return;
-  // }
-  // if(isLabyrinth()) {
-  //   Serial.println("Labyrinth mode");
-  //   labyrinthLoop();
-  //   return;    
-  // }
-  // if(isFirefighter()) {
-  //   Serial.println("Firefighter mode");
-  //   init_GPIO();
-  //   firefighterSetup();
-  //   firefighterLoop();
-  //   return;
-  // } 
+  if(isSpeedrun()) {
+    Serial.println("Lightning McQueen mode");
+    initialize(); // load switch should also be on
+    speedrun();
+    return;
+  }
+  if(isLabyrinth()) {
+    Serial.println("Labyrinth mode");
+    labyrinthLoop();
+    return;    
+  }
+  if(isFirefighter()) {
+    Serial.println("Firefighter mode");
+    init_GPIO();
+    firefighterSetup();
+    firefighterLoop();
+    return;
+  } 
 
   // // Default
   Serial.println("Exploration mode");
