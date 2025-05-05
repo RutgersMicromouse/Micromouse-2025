@@ -15,7 +15,9 @@ void setup() {
   Wire.setClock(40000);
   delay(500);
   // initialize_maze(0,0,true); 
-  initialize_maze(3,3,true);
+  initialize_maze(5,5,true);
+  floodfill();
+  initialize_maze(1,1,false);
   floodfill();
   // initialize_maze(1,1,false);
   // floodfill();

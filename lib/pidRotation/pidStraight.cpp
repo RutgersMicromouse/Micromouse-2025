@@ -11,12 +11,10 @@ void straight(char direction, int distance)
         double targetDirection = 0;
         double leftMotorSpeed = 0;
         double rightMotorSpeed = 0;
-       // double kp = 8;
         double previousTime = millis();
         double totalTime = millis();
         double previousAngle = 0;
         double derivative = angle();
-      //  double kd = 100;
 
         double encoderkP, encoderkD;
         double anglekP, anglekD;
@@ -38,8 +36,9 @@ void straight(char direction, int distance)
             anglekD = 0;
         }
 
-        int numTicks = (102 * distance) / (DIA * PI); //Num ticks that we need to travel
-
+        double tnumTicks = (102 * distance) / (DIA * PI); //Num ticks that we need to travel
+        tnumTicks *= 1.00;
+        int numTicks = tnumTicks;
         switch (direction)
         {
         case 'N':
@@ -62,8 +61,8 @@ void straight(char direction, int distance)
         int currleft = getLeftEncoder();
         int currright = getRightEncoder();
 
-        int newLeft = currleft;
-        int newRight = currright;
+        int previousLeftPosition = currleft;
+        int previousRightPosition = currright;
 
         int currentLeftError = numTicks - currleft;
         int currentRightError = numTicks - currright;
@@ -76,8 +75,13 @@ void straight(char direction, int distance)
         double leftEncoderDeriv = 0;
         double rightEncoderDeriv = 0;
 
-        double oldLeftSpeed = 0;
-        double oldRightSpeed = 0;
+        // Variables for stall detection
+        int stallCheckInterval = 250; // Check for stalls every 250ms
+        int lastStallCheck = millis();
+        int stallThreshold = 2; // Minimum encoder ticks expected in each interval
+        bool isStalled = false;
+        int stallCount = 0;
+        int maxStallCount = 3; // Number of consecutive stall detections before aborting
 
         int startTime = millis();
         while (1)
@@ -108,8 +112,41 @@ void straight(char direction, int distance)
 
             rightMotorSpeed *= 1.1; //Slight adjusment of left motorspeed
 
+            // Check for stall condition at regular intervals
+            if (millis() - lastStallCheck >= stallCheckInterval) {
+                currleft = getLeftEncoder();
+                currright = -1 * getRightEncoder();
+                
+                // Check if the encoder values haven't changed significantly despite power being applied
+                int leftChange = abs(currleft - previousLeftPosition);
+                int rightChange = abs(currright - previousRightPosition);
+                
+                // If motors are running but encoders show little movement, consider it stalled
+                if ((leftMotorSpeed > 30 || rightMotorSpeed > 30) && 
+                    (leftChange < stallThreshold && rightChange < stallThreshold)) {
+                    stallCount++;
+                    isStalled = true;
+                    Serial.printf("Potential stall detected (%d/%d): Left change: %d, Right change: %d\n", 
+                                 stallCount, maxStallCount, leftChange, rightChange);
+                } else {
+                    stallCount = 0;
+                    isStalled = false;
+                }
+                
+                // If stalled for several consecutive checks, abort the movement
+                if (stallCount >= maxStallCount) {
+                    Serial.println("Motor stall detected! Aborting movement.");
+                    moveLeftMotor(0);
+                    moveRightMotor(0);
+                    return;
+                }
+                
+                previousLeftPosition = currleft;
+                previousRightPosition = currright;
+                lastStallCheck = millis();
+            }
 
-            if(leftMotorSpeed > 20|| rightMotorSpeed > 20) {
+            if(leftMotorSpeed > 30 || rightMotorSpeed > 30) {
                 startTime = millis();
             }
 
@@ -137,12 +174,11 @@ void straight(char direction, int distance)
 
             currentAverageError = (currentLeftError + currentRightError)/2;
 
-          //  Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
-
+            // For debugging
+            // Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
         }
 
         moveLeftMotor(0);
         moveRightMotor(0);
         Serial.println("Done");
     }
-

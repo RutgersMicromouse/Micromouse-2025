@@ -4,7 +4,7 @@ void turnTo(char direction) {
     double targetDirection = 0;
     double currentAngle = angle();
     double error = 0;
-    double kp = 1.5;
+    double kp = 1.2;
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
     double totalTime = micros();
