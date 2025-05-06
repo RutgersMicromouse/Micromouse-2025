@@ -85,7 +85,7 @@ void pidForward(double distance) {
         }
 
         // 3. Too close to the front wall
-        if(front() < 25)          { setRightPWM(0); setLeftPWM(0); return; }
+        if(front() < 50)          { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
         error_dist_left = goal_distance - encLeft.read(); 
@@ -167,7 +167,7 @@ void pidForwardLeftWallFollow() {
     while (true) {
         // Guard Clauses:
         // 1. Take all left walls
-        if (!leftWall()) { setRightPWM(0); setLeftPWM(0); return; }
+        if (!leftWall()) { delay(120); setRightPWM(0); setLeftPWM(0); return; }
         
         // 2. Stall Condition, 0.1 second
         if (micros() > sampleTime + 1e5){
@@ -180,7 +180,7 @@ void pidForwardLeftWallFollow() {
         }
 
         // 3. Too close to the front wall
-        if(front() < 25)          { setRightPWM(0); setLeftPWM(0); return; }
+        if(front() < 50)          { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
         error_angle = goal_angle - angle();
