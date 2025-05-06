@@ -2,8 +2,17 @@
 
 void labyrinthLoop() {
     while(true) {
-        pidForwardLeftWallFollow();
-        if (!API::wallLeft()) API::turnLeft();
-        else if (API::wallFront()) API::turnRight();    
+
+        if (!API::wallLeft()) {
+            API::turnLeft();
+            API::moveForward();
+            pidForwardLeftWallFollow();  // move after turn
+        } else if (!API::wallFront()) {
+            pidForwardLeftWallFollow();  // no wall ahead, keep going
+        } else {
+            API::turnRight();  // wall left and front → dead end
+        }
+
     }
+
 }
