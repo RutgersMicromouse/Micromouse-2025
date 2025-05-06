@@ -14,7 +14,8 @@ void photo_save();
 
 void cameraSetup();
 
-#define ASCII_CHARS "#@%*+=-:. "
+// #define ASCII_CHARS "#@%*+=-:. "
+#define ASCII_CHARS " .:-=+*%@#" // dark mode
 
 void imageToAscii();
 void followEdge();
