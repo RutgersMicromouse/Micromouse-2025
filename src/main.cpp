@@ -41,7 +41,9 @@ void setup() {
   }
   Serial.println("Scan done.");
 
-  
+  // move to middle of starting cell from back wall
+  pidForward(50);
+
   // // // Switch options:
   if(isSpeedrun()) {
     Serial.println("Lightning McQueen mode");

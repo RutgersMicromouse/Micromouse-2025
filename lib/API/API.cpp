@@ -4,7 +4,7 @@
 #include <iostream>
 
 #ifdef REAL
-double block_length = 180;
+double block_length = 170;
 
 bool API::wallFront() {
     double dist = front();
