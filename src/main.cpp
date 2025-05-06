@@ -19,6 +19,8 @@ void setup() {
   digitalWrite(LED_BUILTIN, LOW); // turns the builtin LED on (active low)
 
   delay(8000); // Delay to open serial monitor
+  digitalWrite(LED_BUILTIN, HIGH); // turns the builtin LED off (active low)
+
 
   imuSetup();
   tofSetup();
@@ -26,17 +28,18 @@ void setup() {
   motorSetup();
 
 
-  // Serial.println("Scanning I2C bus...");
+
+  Serial.println("Scanning I2C bus...");
   
-  // for (byte address = 1; address < 127; address++) {
-  //   Wire.beginTransmission(address);
-  //   byte error = Wire.endTransmission();
-  //   if (error == 0) {
-  //     Serial.print("Found I2C device at 0x");
-  //     Serial.println(address, HEX);
-  //   }
-  // }
-  // Serial.println("Scan done.");
+  for (byte address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    byte error = Wire.endTransmission();
+    if (error == 0) {
+      Serial.print("Found I2C device at 0x");
+      Serial.println(address, HEX);
+    }
+  }
+  Serial.println("Scan done.");
 
   
   // // // Switch options:
@@ -52,10 +55,11 @@ void setup() {
     return;    
   }
   if(isFirefighter()) {
-    Serial.println("Firefighter mode");
-    init_GPIO();
-    firefighterSetup();
-    firefighterLoop();
+    while(1);
+    // Serial.println("Firefighter mode");
+    // init_GPIO();
+    // firefighterSetup();
+    // firefighterLoop();
     return;
   } 
 
@@ -75,5 +79,8 @@ void loop() {
   // Serial.println(API::wallRight());
 
   // Serial.println(front());
+
+  // Serial.println(angle());
+
 
 }
