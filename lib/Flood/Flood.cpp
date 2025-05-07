@@ -51,6 +51,7 @@ void initialize() {
         loadMazeFromEEPROM(maze);
         loadWallsFromEEPROM(walls);
         Serial.println("loaded");
+		mazePrintout();
         digitalWrite(LED_BUILTIN, LOW);
         delay(200);
         digitalWrite(LED_BUILTIN, HIGH);
@@ -110,7 +111,7 @@ void saveWallsToEEPROM(openCells walls[N][N]) {
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             int index = i * N + j + 256;
-            EEPROM.write(index, walls[i][j].openN | (walls[i][j].openS << 1) | (walls[i][j].openE << 2) | (walls[i][j].openW << 3));
+            EEPROM.write(index, (walls[i][j].openN) | (walls[i][j].openS << 1) | (walls[i][j].openE << 2) | (walls[i][j].openW << 3) | (walls[i][j].visited << 4));
         }
 	}
 	EEPROM.commit(); // a full commitment's what I'm thinking of
@@ -125,6 +126,7 @@ void loadWallsFromEEPROM(openCells walls[N][N]) {
             walls[i][j].openS = (data >> 1) & 0x01;
             walls[i][j].openE = (data >> 2) & 0x01;
             walls[i][j].openW = (data >> 3) & 0x01;
+			walls[i][j].visited = (data >> 4) & 0x01;
         }
     }
 }
@@ -792,6 +794,17 @@ void speedrun() {
 	}
 	*/
 
+	
+	for(int j = 32; j >= 0; j--) {
+		for(int i = 0; i < 33; i++) {
+			Serial.print(highResMaze[i][j]);
+			Serial.print(" ");
+		}
+		Serial.println();
+	}
+	
+
+
 
 	// straight line A*
 	// Moved to outside function to not kill the stack
@@ -924,13 +937,24 @@ void speedrun() {
 					// if current command is to go straight and previous command is to go straight, combine them
 					if (!commands.empty() && commands.back().first == 'F') {
 						commands.back().second += 1;
-						if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
-							commands.back().second += 0.414213562373;}
+
+						// add extra distance when going diagonal
+						if (nextNodeDirection.first != 0 && nextNodeDirection.second != 0) { 
+							commands.back().second += 0.414213562373;
+							// commands.back().second += 0.4; // maybe a bit more
+
+						}
+					
 					} else {
 					// for case at beginning where it's same direction but no straight command, append it
-						commands.push_back({'F', 1.0});
-						if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
-							commands.back().second += 0.414213562373;}
+						commands.push_back({'F', 1.1});
+						
+						// add extra distance when going diagonal
+						if (nextNodeDirection.first != 0 && nextNodeDirection.second != 0) { 
+							commands.back().second += 0.414213562373;
+							// commands.back().second += 0.4; // maybe a bit more
+
+						}
 					}
 
 				} else {
@@ -978,12 +1002,14 @@ void speedrun() {
 #endif
 
 					// finally move forward
-					commands.push_back({'F', 1});
+					commands.push_back({'F', 1.1});
 
 #ifdef REAL
 					// extra distance for diagonals
-					if (currNodeDirection.first != 0 && currNodeDirection.second != 0) { 
-						commands.back().second += 0.414213562373;}
+					if (nextNodeDirection.first != 0 && nextNodeDirection.second != 0) { 
+						commands.back().second += 0.414213562373;
+						// commands.back().second += 0.4855; // maybe a bit more,   < < 0.5
+					}
 #endif
 				}
 			}
