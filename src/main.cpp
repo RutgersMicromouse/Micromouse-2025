@@ -18,7 +18,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // turns the builtin LED on (active low)
 
-  delay(8000); // Delay to open serial monitor
+  delay(2000); // Delay to open serial monitor
   digitalWrite(LED_BUILTIN, HIGH); // turns the builtin LED off (active low)
 
 
@@ -45,9 +45,18 @@ void setup() {
   pidForward(50);
 
   // // // Switch options:
+  if(isFirefighter()) { // Do nothing for now
+    while(1);
+    // Serial.println("Firefighter mode");
+    // init_GPIO();
+    // firefighterSetup();
+    // firefighterLoop();
+    return;
+  } 
   if(isSpeedrun()) {
     Serial.println("Lightning McQueen mode");
     initialize(); // load switch should also be on
+    delay(100);
     speedrun();
     return;
   }
@@ -56,14 +65,6 @@ void setup() {
     labyrinthLoop();
     return;    
   }
-  if(isFirefighter()) {
-    while(1);
-    // Serial.println("Firefighter mode");
-    // init_GPIO();
-    // firefighterSetup();
-    // firefighterLoop();
-    return;
-  } 
 
   // // Default
   Serial.println("Exploration mode");
