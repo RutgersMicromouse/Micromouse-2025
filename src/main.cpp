@@ -16,8 +16,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   delay(500);
   digitalWrite(LED_BUILTIN, LOW); // Built-in LED is active-LOW
-  
-  
+
   
 
 
@@ -30,7 +29,7 @@ void setup() {
 void loop() {
   followEdge();
 
-    imageToAscii();
+    // imageToAscii();
     // delay(500);
     // digitalWrite(LED_BUILTIN, HIGH); 
     // delay(500);

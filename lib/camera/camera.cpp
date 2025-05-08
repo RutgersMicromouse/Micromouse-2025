@@ -100,7 +100,7 @@ void imageToAscii() {
   uint8_t* image_data = fb->buf;
 
   // Iterate over all pixels to convert to ASCII
-  for (int y = 0; y < fb->height; y++) { // Iterate over rows
+  for (int y = 0; y < fb->height - 90; y++) { // Iterate over rows
     for (int x = 0; x < fb->width; x++) { // Iterate over columns
       uint8_t gray = image_data[y * fb->width + x];
       if (gray > 170) {
@@ -114,7 +114,7 @@ void imageToAscii() {
       
       
   }
-  Serial.println(); // Newline at the end of each row
+  Serial.println("|"); // Newline at the end of each row
 }
 
   Serial.println(); // Newline at the end of each row
@@ -130,7 +130,11 @@ void imageToAscii() {
 
 }
 
+
+
 void followEdge() {
+
+  
   // Capture a frame
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
@@ -139,67 +143,81 @@ void followEdge() {
   }
 
   uint8_t* image_data = fb->buf;
-  const uint8_t threshold = 128;  // Adjust based on lighting
 
-  // ---- Intersection Detection (blob analysis) ----
-  int rows[] = { fb->height / 4, fb->height / 2, 3 * fb->height / 4 };
-  int row_blob_counts[3] = {0};
+  
+  int width = fb->width;
+  int height = fb->height - 90; // your crop
+  int third = width / 3;
 
-  for (int r = 0; r < 3; r++) {
-    int y = rows[r];
-    bool in_blob = false;
-    for (int x = 0; x < fb->width; x++) {
-      uint8_t gray = image_data[y * fb->width + x];
-      if (gray > threshold) {
-        if (!in_blob) {
-          row_blob_counts[r]++;
-          in_blob = true;
-        }
-      } else {
-        in_blob = false;
+
+  int left_count = 0;
+  int mid_count = 0;
+  int right_count = 0;
+  
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      uint8_t gray = image_data[y * width + x];
+
+      // Thresholding
+      if (gray > 170) {
+        if (x < third) left_count++;
+        else if (x < 2 * third) mid_count++;
+        else right_count++;
       }
     }
   }
 
-  int total_blobs = row_blob_counts[0] + row_blob_counts[1] + row_blob_counts[2];
-  Serial.printf("Blobs: top=%d, mid=%d, bot=%d, total=%d\n",
-                row_blob_counts[0], row_blob_counts[1], row_blob_counts[2], total_blobs);
+  // Normalize
+  int total = left_count + mid_count + right_count + 1; // prevent divide by 0
+  float left_ratio = (float)left_count / total;
+  float right_ratio = (float)right_count / total;
 
-  // ---- Intersection decision logic ----
-  if (total_blobs >= 3 || row_blob_counts[1] >= 2) {
-    Serial.println("T-intersection or crossroad detected");
-    // Add logic here to choose direction (left/right/forward) based on path planning
-  } else if (row_blob_counts[0] >= 1 && row_blob_counts[2] >= 1) {
-    Serial.println("Diagonal or complex intersection detected");
-  } else if (row_blob_counts[2] == 1 && row_blob_counts[1] == 0) {
-    Serial.println("Dead end detected");
-  } else {
-    // ---- Normal line following ----
-    int edge_position = -1;
-    int y = fb->height / 2; // Middle row
-    for (int x = 0; x < fb->width; x++) {
-      uint8_t gray = image_data[y * fb->width + x];
-      if (gray > threshold) {
-        edge_position = x;
-        break;
-      }
-    }
+  
 
-    if (edge_position != -1) {
-      int error = (fb->width / 2) - edge_position;
-      int motor_speed = 10 + error; // Simple proportional control
-      Serial.printf("Following line - Edge position: %d, Error: %d, Motor speed: %d\n",
-                    edge_position, error, motor_speed);
+  const int base_speed = 100;
+  const int max_speed = 140;
 
-      // Add your motor control here:
-      setLeftPWM(motor_speed);
-      setRightPWM(-motor_speed);
-    } else {
-      Serial.println("Line not found");
-      // Stop or reverse slightly, depending on your bot's logic
-    }
-  }
+
+  // Motor logic: more white on one side = turn toward that side
+  int left_speed = base_speed + 3*(right_ratio - left_ratio) * base_speed;
+  int right_speed = base_speed + 3*(left_ratio - right_ratio) * base_speed;
+
+  
+  // // Detect if we need to turn sharply (e.g., 90-degree turn)
+  // if (left_ratio > 0.5) {
+  //   // Line is on the left side, perform a sharp left turn
+  //   // Stop right motor and continue turning with the left motor
+  //   left_speed = -150;  // Stop left motor (or slow it down if you want a slower turn)
+  //   right_speed = max_speed;  // Right motor should keep moving forward
+  //   Serial.println("Sharp Left Turn Detected!");
+  // }
+  // else if (right_ratio > 0.5) {
+  //   // Line is on the right side, perform a sharp right turn
+  //   // Stop left motor and continue turning with the right motor
+  //   left_speed = max_speed;  // Left motor should keep moving forward
+  //   right_speed = -150;  // Stop right motor
+  //   Serial.println("Sharp Right Turn Detected!");
+  // }
+  // else {
+  //   // Otherwise, continue driving straight
+  //   left_speed = max_speed;
+  //   right_speed = max_speed;
+  // }
+
+  // Clamp
+  left_speed = constrain(left_speed, -300, max_speed);
+  right_speed = constrain(right_speed, -300, max_speed);
+
+
+  // Apply motor speeds
+  Serial.printf("Left: %d, Right: %d\n", left_speed, right_speed);
+  
+  
+  setLeftPWM(left_speed);
+  setRightPWM(right_speed);
+
 
   esp_camera_fb_return(fb);
-  delay(100);
+  delay(50);
 }
