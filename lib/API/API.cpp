@@ -4,7 +4,7 @@
 #include <iostream>
 
 #ifdef REAL
-double block_length = 175;
+double block_length = 185;
 
 bool API::wallFront() {
     double dist = front();
@@ -50,6 +50,8 @@ void API::moveForwardHalf(double numHalfSteps) {
 // }
 
 void API::turnRight() {
+    delay(100);
+
     double angle_goal;
 
     double currentAngle = angle();
@@ -69,6 +71,8 @@ void API::turnRight() {
 }
 
 void API::turnLeft() {
+    delay(100);
+
     double angle_goal;
 
     double currentAngle = angle();

@@ -85,7 +85,7 @@ void pidForward(double distance) {
         }
 
         // 3. Too close to the front wall
-        if(abs(fmod(goal_angle, 90.0)) <= 5 && front() < 90) { setRightPWM(0); setLeftPWM(0); return; }
+        if(front() < 90) { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
         error_dist_left = goal_distance - encLeft.read(); 
@@ -109,7 +109,7 @@ void pidForward(double distance) {
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
         // Serial.printf("angleOut %f \n", angleOut);
-        setRightPWM(distOutRight - angleOut+5); delay(0); setLeftPWM(distOutLeft + angleOut);
+        setRightPWM(distOutRight - angleOut+10); delay(0); setLeftPWM(distOutLeft + angleOut);
 
         // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 
