@@ -15,7 +15,7 @@ void pidForward(double distance) {
     Serial.print("Hello pidForward! ");
     // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
     double goal_distance = TICKS_PER_ROTATION * distance /( WHEEL_DIAM * PI); // Converts mm -> encoder ticks
-    goal_distance *= 1.10;
+    // goal_distance *= 1.10;
     encLeft.write(0); encRight.write(0); // Reset encoder position
 
     // Find the closest world angle axis
