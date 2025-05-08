@@ -20,23 +20,24 @@ void straight(char direction, int distance)
         double anglekP, anglekD;
 
         if(distance == 160) {
-            encoderkP = 0.9;
-            encoderkD = 0.1;
-            anglekP = 2;
-            anglekD = 2.3; 
-        } else if(distance > 160){
-            encoderkP = 1.5;
-            encoderkD = 5;
-            anglekP = 0;  
-            anglekD = 0;
-        } else {
-            encoderkP = 1.3;
-            encoderkD = 0.5;
-            anglekP = 0;
-            anglekD = 0;
+            encoderkP = 0.8;
+            encoderkD = 0;
+            anglekP = 0.2;
+            anglekD = 1.2; 
+        // } else if(distance > 160){
+        //     encoderkP = 1.5;
+        //     encoderkD = 5;
+        //     anglekP = 0;  
+        //     anglekD = 0;
+        // } else {
+        //     encoderkP = 1.3;
+        //     encoderkD = 0.5;
+        //     anglekP = 0;
+        //     anglekD = 0;
+        // }
         }
-
-        double tnumTicks = (102 * distance) / (DIA * PI); //Num ticks that we need to travel
+        
+        double tnumTicks = (100 * distance) / (DIA * PI); //Num ticks that we need to travel
         tnumTicks *= 1.00;
         int numTicks = tnumTicks;
         switch (direction)
@@ -110,8 +111,6 @@ void straight(char direction, int distance)
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
 
-            rightMotorSpeed *= 1.1; //Slight adjusment of left motorspeed
-
             // Check for stall condition at regular intervals
             if (millis() - lastStallCheck >= stallCheckInterval) {
                 currleft = getLeftEncoder();
@@ -156,6 +155,7 @@ void straight(char direction, int distance)
                 break;
             }
 
+
             moveLeftMotor(leftMotorSpeed);
             moveRightMotor(rightMotorSpeed);
 
@@ -180,5 +180,6 @@ void straight(char direction, int distance)
 
         moveLeftMotor(0);
         moveRightMotor(0);
+        delay(10);
         Serial.println("Done");
     }
