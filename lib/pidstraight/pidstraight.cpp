@@ -1,6 +1,6 @@
 #include "pidstraight.h"
 //PID for distance
-double Kp_dist = 0.33;
+double Kp_dist = 0.30;
 double Ki_dist = 0;
 double Kd_dist = 0;
 //PID for angle offset
@@ -109,7 +109,7 @@ void pidForward(double distance) {
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
         // Serial.printf("angleOut %f \n", angleOut);
-        setRightPWM(distOutRight - angleOut+10); delay(0); setLeftPWM(distOutLeft + angleOut);
+        setRightPWM(distOutRight - angleOut+20); delay(0); setLeftPWM(distOutLeft + angleOut);
 
         // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 

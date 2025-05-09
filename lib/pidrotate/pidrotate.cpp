@@ -1,6 +1,6 @@
 #include "pidrotate.h"
 
-double Kp = 2.5;
+double Kp = 2.7;
 double Ki = 0;
 double Kd = 0;
 
