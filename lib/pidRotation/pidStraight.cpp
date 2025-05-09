@@ -20,21 +20,26 @@ void straight(char direction, int distance)
         double anglekP, anglekD;
 
         if(distance == 160) {
-            encoderkP = 0.8;
+            // encoderkP = 0.9;
+            // encoderkD = 0.8;
+            // anglekP = 1.1;
+            // anglekD = 0.5;
+
+            // encoderkP = 0.9;
+            // encoderkD = 0.4;
+            // anglekP = 0.9;
+            // anglekD = 0.5;
+
+            encoderkP = 0.87; 
+            encoderkD = 0.9; //0.2
+            anglekP = 1.5; //2 
+            anglekD = 0.9; //0.8
+
+        } else if(distance == 80) {
+            encoderkP = 1;
             encoderkD = 0;
-            anglekP = 0.2;
-            anglekD = 1.2; 
-        // } else if(distance > 160){
-        //     encoderkP = 1.5;
-        //     encoderkD = 5;
-        //     anglekP = 0;  
-        //     anglekD = 0;
-        // } else {
-        //     encoderkP = 1.3;
-        //     encoderkD = 0.5;
-        //     anglekP = 0;
-        //     anglekD = 0;
-        // }
+            anglekP = 1;
+            anglekD = 0; 
         }
         
         double tnumTicks = (100 * distance) / (DIA * PI); //Num ticks that we need to travel
@@ -107,9 +112,11 @@ void straight(char direction, int distance)
 
             //Calculating left and right motor speed
             leftMotorSpeed = (encoderkP * currentLeftError) + (anglekP * angleError + anglekD * derivative) + encoderkD * leftEncoderDeriv;
-            rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError + anglekD * derivative) + encoderkD * rightEncoderDeriv;
+            rightMotorSpeed = (encoderkP * currentRightError) - (anglekP * angleError - anglekD * derivative) + encoderkD * rightEncoderDeriv;
+
             leftMotorSpeed = constrain(leftMotorSpeed, 0, maxPWM);
             rightMotorSpeed = constrain(rightMotorSpeed, 0, maxPWM);
+            
 
             // Check for stall condition at regular intervals
             if (millis() - lastStallCheck >= stallCheckInterval) {
@@ -175,11 +182,11 @@ void straight(char direction, int distance)
             currentAverageError = (currentLeftError + currentRightError)/2;
 
             // For debugging
-            // Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
+            Serial.printf("left motor speed: %lf\tright motor speed: %lf\n", leftMotorSpeed, rightMotorSpeed);
         }
 
         moveLeftMotor(0);
         moveRightMotor(0);
-        delay(10);
+        delay(500);
         Serial.println("Done");
     }

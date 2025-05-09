@@ -14,21 +14,14 @@ void setup() {
   setupIMU();
   Wire.setClock(40000);
   delay(500);
-  // straight('N', 160);
-  // delay(10);
+  // while(1){
+  //   straight('N', 160);
+  // }
   // turnTo('W');
-  // delay(10);
-  // turnTo('W');
-  // delay(10);
-  // turnTo('S');
-  // delay(10);
-  // turnTo('E');
-  // delay(10);
-  // turnTo('N');
-  // initialize_maze(0,0,true); 
+ 
   straight('N', 80);
   delay(1000);
-  initialize_maze(5,5,true);
+  initialize_maze(15,15,true);
   floodfill();
   initialize_maze(1,1,false);
   floodfill();

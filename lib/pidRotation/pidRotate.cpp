@@ -4,13 +4,13 @@ void turnTo(char direction) {
     double targetDirection = 0;
     double currentAngle = angle();
     double error = 0;
-    double kp = 1;
+    double kp = 1.03;
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
     double totalTime = micros();
     double previousTime = micros();
     double totalError = 0;
-    double ki = 1;
+    double ki = 0;
     
     // New variables for position stability check
     unsigned long stablePositionStartTime = 0;
@@ -86,6 +86,7 @@ void turnTo(char direction) {
         }
 
         if(leftMotorSpeed < rightMotorSpeed) {
+            kp = 1.0;
             leftMotorSpeed *= 1.25;
             rightMotorSpeed *= 1.25;
         }
@@ -116,5 +117,5 @@ void turnTo(char direction) {
 
     moveLeftMotor(0);
     moveRightMotor(0);
-    delay(10);
+    delay(500);
 }
