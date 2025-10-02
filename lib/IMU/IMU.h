@@ -7,6 +7,6 @@
 #include <SPI.h>
 
 void setupIMU();
-double angle();
+double getAngle();
 
 #endif

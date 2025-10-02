@@ -1,8 +1,7 @@
 #ifndef distance_sensor
 #define distance_sensor 
-#define rightSensor 4
-#define leftSensor 5
-#define XSHUT 3
+#define rightSensor 3
+#define leftSensor 4
 
 #include <Wire.h>
 #include <Arduino.h>

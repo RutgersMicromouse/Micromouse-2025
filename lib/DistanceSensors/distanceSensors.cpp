@@ -2,20 +2,17 @@
 
 VL53L1X sensor;
 
-void setupDistanceSensors()
-{
-  Serial.begin(115200);
-  Wire.begin(1,2);
-  sensor.setAddress(0x29); // Optional: only needed if you've changed the default
-  sensor.setTimeout(500);
+void setupDistanceSensors() {
+  delay(100);  // Wait for sensor to power up
   sensor.setBus(&Wire);
-  if (!sensor.init()) // Pass custom Wire instance
-  {
-    Serial.println("Failed to detect and initialize sensor!");
-    while (1);
+  sensor.setTimeout(500);
+  
+  if (!sensor.init()) {
+    Serial.println("❌ Failed to detect and initialize VL53L1X sensor!");
+    while (1); // Stop if sensor not found
   }
 
-  Serial.println("TOF Sensor initialized.");
+  Serial.println("✅ VL53L1X sensor initialized.");
   sensor.setDistanceMode(VL53L1X::Long);
   sensor.setMeasurementTimingBudget(50000);
   sensor.startContinuous(50);
@@ -29,6 +26,7 @@ boolean checkLeftWall() {
     int16_t leftTime = pulseIn(leftSensor, HIGH);
     int16_t leftDistance = (leftTime - 1000) * 3 / 4;
 
+    Serial.println(leftDistance);
     if(leftDistance < 80) {
         return true;
     }  
@@ -41,6 +39,7 @@ boolean checkRightWall() {
     int16_t rightTime = pulseIn(rightSensor, HIGH);
     int16_t rightDistance = (rightTime - 1000) * 3 / 4;
     
+    Serial.println(rightDistance);
     if(rightDistance < 80) {
         return true;
     } 
@@ -48,6 +47,7 @@ boolean checkRightWall() {
     return false;
 }
 
+//Change front disatnce to <110 for checking front wall
 int16_t checkFrontWall() {
     return sensor.read();
 }

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include "../Motors/Motors.h"
-#include "../DistanceSensors/distanceSensors.h"
-#include "../IMU/IMU.h"
-#include "../pidRotation/pidRotate.h"
-#include "../pidRotation/pidStraight.h"
+#include "../Motors/motors.h"
+#include "../distanceSensors/distanceSensors.h"
+#include "../IMU/imu.h"
+#include "../PIDMovement/pidRotate.h"
+#include "../PIDMovement/pidStraight.h"
 
 bool wallFront();
 bool wallRight();

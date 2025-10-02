@@ -1,18 +1,21 @@
 #include "pidRotate.h"
-static int maxspeed = 150;
+
 void turnTo(char direction)
 {
     double targetDirection = 0;
-    double currentAngle = angle();
+    double currentAngle = getAngle();
     double error = 0;
-    double kp = 1.27;
-    double leftMotorSpeed = 0;
-    double rightMotorSpeed = 0;
-    double totalTime = micros();
-    double previousTime = micros();
     double totalError = 0;
+
+    double kp = 1.27;
     double ki = 0.0;
 
+    double leftMotorSpeed = 0;
+    double rightMotorSpeed = 0;
+
+    double totalTime = micros();
+    double previousTime = micros();
+    
     // New variables for position stability check
     unsigned long stablePositionStartTime = 0;
     bool isStable = false;
@@ -46,11 +49,11 @@ void turnTo(char direction)
     }
 
     double startTime = micros();
-    double sampleAngle = angle();
+    double sampleAngle = getAngle();
 
     while (1)
     {
-        currentAngle = angle();
+        currentAngle = getAngle();
         totalTime = micros();
         error = targetDirection - currentAngle;
 
@@ -69,8 +72,6 @@ void turnTo(char direction)
         previousTime = totalTime;
 
         Serial.printf("Left Motor Speed: %lf\t Right Motor Speed: %lf\t Error: %lf\n", leftMotorSpeed, rightMotorSpeed, error);
-        leftMotorSpeed = constrain(leftMotorSpeed, -maxspeed, maxspeed);
-        rightMotorSpeed = constrain(rightMotorSpeed, -maxspeed, maxspeed);
         leftMotorSpeed *= 1.0;
         rightMotorSpeed *= 1.1;
 

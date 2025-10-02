@@ -1,4 +1,4 @@
-#include "./API.h"
+#include "../lib/pathfinding/API.h"
 
 #include <cstdlib>
 #include <iostream>

@@ -1,9 +1,8 @@
 #ifndef pidRotate_h
 #define pidRotate_h
 
-#include "../IMU/IMU.h"
-#include "../Motors/Motors.h"
-
+#include "../IMU/imu.h"
+#include "../Motors/motors.h"
 
 void turnTo(char direction);
 

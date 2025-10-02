@@ -1,23 +1,24 @@
-#include "IMU.h"
+#include "imu.h"
 
-Adafruit_BNO055 bno;
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28, &Wire);
 
 void setupIMU() {
-    // put your setup code here, to run once:
-    bno = Adafruit_BNO055(55, 0x28);
-  
-    if (!bno.begin()) Serial.print("No BNO055 detected");
-    else Serial.println("IMU is setup!");
-}
-// double xdist(){
-//     sensors_event_t orientationdata;
-//     bno.getEvent(&orientationdata,Adafruit_BNO055::VECTOR_EULER);
-//     return orientationdata.orientation.
-// }
-double angle() {
-    sensors_event_t orientationData;
-    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-    return orientationData.orientation.x;
+
+  Serial.println("finding IMU in method");
+
+  if (!bno.begin()) {
+    Serial.println("No BNO055 detected");
+   
+  } 
+
+  //bno.begin();
+
+ // Serial.println("IMU found!");
   
 }
-  
+
+double getAngle() {
+  sensors_event_t orientationData;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  return orientationData.orientation.x;
+}

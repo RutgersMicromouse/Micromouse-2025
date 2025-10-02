@@ -1,22 +1,15 @@
-#include <Arduino.h>
-#include "Motors.h"
+#include "motors.h"
 #define PI 3.1415926535897932384626433832795
-
-
 
 ESP32Encoder encLeft;
 ESP32Encoder encRight;
 
-//IN1 and IN2 are for Motor A
-//IN3 and IN4 are for Motor B
-
-//Call analogWrite on the pin that is high
 int32_t getLeftEncoder(){
   return encLeft.getCount();
 }
 
 int32_t getRightEncoder(){
-  return encRight.getCount();
+  return -1 * encRight.getCount();
 }
 void setupEncoders() {
     ESP32Encoder::useInternalWeakPullResistors = puType::up;
@@ -27,79 +20,55 @@ void setupEncoders() {
 }
 
 void setupMotors(){
-  pinMode(AIN1_LEFTMOT, OUTPUT);
-  pinMode(AIN2_LEFTMOT, OUTPUT);
-  pinMode(BIN1_RIGHTMOT, OUTPUT);
-  pinMode(BIN2_RIGHTMOT, OUTPUT);
+
+  pinMode(BIN1, OUTPUT);  
+  pinMode(BIN2, OUTPUT);
+  pinMode(PWMB, OUTPUT);
+  pinMode(STBY, OUTPUT);
+
+  pinMode(AIN1, OUTPUT);  
+  pinMode(AIN2, OUTPUT);
+  pinMode(PWMA, OUTPUT);
+  digitalWrite(STBY, HIGH);
 
   setupEncoders();
 
   Serial.println("Motors are setup!");
 }
 
-static char Lcurrentdirection = '\0';
-
-
-static void actualMoveLeftMotor(uint8_t leftPWN, char direction){
-  if(direction == 'N') { //moving forward relative to front of robot
-    if(Lcurrentdirection != direction){
-      digitalWrite(AIN1_LEFTMOT, HIGH);
-      digitalWrite(AIN2_LEFTMOT, LOW);
-      Lcurrentdirection = direction;
-    }
-    analogWrite(AIN1_LEFTMOT, leftPWN);
-  } else {
-    if (Lcurrentdirection != direction){
-      digitalWrite(AIN1_LEFTMOT, LOW);
-      digitalWrite(AIN2_LEFTMOT, HIGH);
-      Lcurrentdirection = direction;
-    }
-    analogWrite(AIN2_LEFTMOT, leftPWN);
-  }
-}
-
-
 void moveLeftMotor(int PWM) {
-  if(PWM >= 0){
-    actualMoveLeftMotor(PWM,'N');
-  }
-  else{
-    actualMoveLeftMotor(-PWM,'X');
-  }
-}
-static char Rcurrentdirection = '\0';
-static void actualMoveRightMotor(uint8_t rightPWM, char direction) {
-  if(direction == 'N') { //moving forward relative to front of robot
-    if(Rcurrentdirection != direction){
-      digitalWrite(BIN1_RIGHTMOT, LOW);
-      digitalWrite(BIN2_RIGHTMOT, HIGH);
-      Rcurrentdirection = direction;
-    }
-    analogWrite(BIN2_RIGHTMOT, rightPWM);
-  } else {
-    if(Rcurrentdirection != direction){
-      digitalWrite(BIN1_RIGHTMOT, HIGH);
-      digitalWrite(BIN2_RIGHTMOT, LOW);
-      Rcurrentdirection = direction;
-    }
-    analogWrite(BIN1_RIGHTMOT, rightPWM);
-  }
 
-}
+    if(PWM > 0) {
+        digitalWrite(BIN1, LOW);
+        digitalWrite(BIN2, HIGH);
+        analogWrite(PWMB, PWM);
+    } else {
+         digitalWrite(BIN1, HIGH);
+        digitalWrite(BIN2, LOW);
+        analogWrite(PWMB, -PWM);
+    }
+    
+}   
 
 void moveRightMotor(int PWM) {
-  if(PWM >= 0){
-    actualMoveRightMotor(PWM,'N');
-  }
-  else{
-    actualMoveRightMotor(-PWM,'X');
-  }
+
+    if(PWM > 0) {
+        digitalWrite(AIN1, HIGH);
+        digitalWrite(AIN2, LOW);
+        analogWrite(PWMA, PWM);
+      
+    } else {
+        digitalWrite(AIN1, LOW);
+        digitalWrite(AIN2, HIGH);
+        analogWrite(PWMA, -PWM);
+        
+    }
+
 }
 
 void stopMotors() {
-  digitalWrite(AIN1_LEFTMOT, LOW);
-  digitalWrite(AIN2_LEFTMOT, LOW);
-  digitalWrite(BIN1_RIGHTMOT, LOW);
-  digitalWrite(BIN2_RIGHTMOT, LOW);
-
+    analogWrite(PWMA, 0);
+    analogWrite(PWMB, 0);
 }
+
+
