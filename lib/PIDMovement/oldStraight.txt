@@ -2,42 +2,63 @@
 #include "pidRotate.h"
 #define DIA 28
 #define PI 3.1415926535897932384626433832795
-#define leftTick 285
-#define rightTick 395
+#define leftTick 140
+#define rightTick 140
 
 void straight(char direction, int distance)
 {
 
-    double currentAngle = getAngle();
-    double targetDirection = 0;
-    double previousTime = micros();
-    double totalTime = micros();
-    double previousAngle = 0;
-    double derivative = getAngle();
-    double angleError = 0;
-    double leftEncoderDeriv = 0;
-    double rightEncoderDeriv = 0;
+    distance = distance * 1.27;
+    //Clearing encoder counts
+    encLeft.clearCount();
+    encRight.clearCount();
 
-    // final motor speeds
+    //PID Variables
+        /*Start at 1 and then go to 0.1 and all the way to 10 (larger value should mean there is a smaller error)
+          Integral will make us reach the target faster, but might overshoot/become unstable
+          Smaller error, means the PWM value should be smaller (larger error means the PWM value should be larger)
+        */
+    double leftP = 1; //1
+    double rightP = 1.1; //0.6
+    double encoderKd = 0.5;
+
+    double leftAngleP = 0.05; //0.83
+    double rightAngleP = 1.05; //1.5
+
+    //Motor Speeds
     double leftSpeed = 0.0;
     double rightSpeed = 0.0;
 
-//    double P_angle = 1;
-//    double D_angle = 1;
-//    double P_lmot = 0.75;
- //   double P_rmot = 0.75;
-  //  double D_motors = 1;
+    //Calculating number of ticks needed to move
+    double leftNumTicks = (leftTick * distance) / (DIA * PI);
+    double rightNumTicks = (rightTick * distance) / (DIA * PI);
+    
 
+    //Mapping ticks to PWM (Will result in speeds being between 0 and 255) 
+    double leftMaxError = leftNumTicks;
+    double rightMaxError = rightNumTicks;
+    double leftM = 125/(leftMaxError); //Equation: (255 - 0)/(leftMaxError - minError)
+    double rightM = 125/(rightMaxError); //Equation: (255 - 0)/(rightMaxError - minError)
 
-    double encoderkP_left = 1;
-    double encoderkP_right = 1;
-    double encoderkD_left = 1.5; 
-    double encoderkD_right = 2;
-    double anglekP = 1; //0.5
-    double anglekD = 0; //0.75
+    //Getting the errors
+    double previousLeftError = leftNumTicks - getLeftEncoder();
+    double previousRightError = rightNumTicks - getRightEncoder();
+    double currentLeftError = previousLeftError;
+    double currentRightError = previousRightError;
+    
+    //Derivative stuff
+    double leftEncoderDeriv = 0;
+    double rightEncoderDeriv = 0;
+    double previousTime = micros();
+    double totalTime = micros();
 
-    switch (direction)
-    {
+    
+    //Angle stuff
+    double angleError = 0.0;
+    double currentAngle = getAngle();
+    double targetDirection = 0.0;
+
+    switch (direction) {
         case 'N':
             targetDirection = 0;
             break;
@@ -52,49 +73,20 @@ void straight(char direction, int distance)
             break;
     }
 
-    double leftNumTicks = (((leftTick + rightTick)/2) * distance) / (DIA * PI); // Num ticks that we need to travel
-    double rightNumTicks = (((leftTick + rightTick)/2) * distance) / (DIA * PI);
-    double EncoderLeftError = leftNumTicks;
-    double EncoderRightError = rightNumTicks;
-
-    Serial.printf("left error: %lf\tright error: %lf\n", EncoderLeftError, EncoderRightError);
-
-    encLeft.clearCount();
-    encRight.clearCount();
-
-    encLeft.clearCount();
-    encRight.clearCount();
-
-    int currleft = getLeftEncoder();
-    int currright = getRightEncoder();
-
-    int previousLeftPosition = currleft;
-    int previousRightPosition = currright;
-
-    int currentLeftError = leftNumTicks - currleft;
-    int currentRightError = rightNumTicks - currright;
-    int previousLeftError = leftNumTicks - currleft;
-    int previousRightError = rightNumTicks - currright;
-    
-    // time values (for derivative)
-    // unsigned long PreviousTime = micros();
-    // unsigned long CurrentTime = micros();
-    
     // Variables for stall detection
-    // unsigned long stallStartTime = 0;
-    // bool potentialStall = false;
-    // double prevLeftSpeed = 0;
-    // double prevRightSpeed = 0;
-    // const double stallThreshold = 3.0;        // Motor speed difference threshold
-    // const unsigned long stallTimeThreshold = 500; // 0.5 seconds in milliseconds
-    
-    int i = 0;
-    while (abs(currentLeftError) > 5)
+    unsigned long stallStartTime = 0;
+    bool potentialStall = false;
+    double prevLeftSpeed = 0;
+    double prevRightSpeed = 0;
+    const double stallThreshold = 3.0;        // Motor speed difference threshold
+    const unsigned long stallTimeThreshold = 5e6; // 0.5 seconds in milliseconds
+
+    double startTime = micros();
+
+    while (abs(leftNumTicks - getLeftEncoder()) > 10 && abs(rightNumTicks - getRightEncoder()) > 10)
     {
-        //Serial.println("In the while loop");
-        // retrieve the angle error
-        currentAngle = getAngle();
-        angleError = targetDirection - currentAngle;
+
+        angleError = targetDirection - getAngle();
         totalTime = micros();
         while(angleError > 180)
         {
@@ -105,28 +97,27 @@ void straight(char direction, int distance)
             angleError += 360;
         }
 
-        // Calculate current encoder errors
-        //EncoderLeftError = numTicks - getLeftEncoder();
-        //EncoderRightError = numTicks - getRightEncoder();
+        //Getting the new errors for the left and right
+        currentLeftError = leftNumTicks - getLeftEncoder();
+        currentRightError = rightNumTicks - getRightEncoder();
 
-        derivative = (currentAngle - previousAngle) / (totalTime - previousTime);
         leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
         rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
 
-    
         // Calculate motor speeds
-        leftSpeed = (encoderkP_left * currentLeftError) + (encoderkD_left * leftEncoderDeriv) + (anglekP * angleError + anglekD * derivative);
-        rightSpeed = (encoderkP_right * currentRightError) + (encoderkD_right * rightEncoderDeriv) + (anglekP * angleError - anglekD * derivative);
-        
-        // Check for stall condition
-        // if (fabs(LeftMotorSpeed - prevLeftSpeed) < stallThreshold && 
-        //     fabs(RightMotorSpeed - prevRightSpeed) < stallThreshold) {
+        leftSpeed = (leftP * leftM * currentLeftError) + (encoderKd * leftEncoderDeriv) + (leftAngleP * angleError);
+        rightSpeed = (rightP * rightM * currentRightError) + (encoderKd * rightEncoderDeriv) - (rightAngleP * angleError);
+
+        Serial.printf("Left Speed: %lf  Right Speed: %lf\n", leftSpeed, rightSpeed);
+        //Running the motors
+
+        // if (fabs(leftSpeed - prevLeftSpeed) < stallThreshold && 
+        //     fabs(rightSpeed - prevRightSpeed) < stallThreshold) {
         //     if (!potentialStall) {
         //         // First time detected potential stall
-        //         stallStartTime = millis();
-        //         potentialStall = true;
-        //         Serial.println("Potential stall detected");
-        //     } else if ((millis() - stallStartTime) > stallTimeThreshold) {
+        //         stallStartTime = micros();
+        //         potentialStall = true;    
+        //     } else if ((micros() - stallStartTime) > stallTimeThreshold) {
         //         // Stall condition has persisted for enough time
         //         Serial.println("Stall confirmed - terminating movement");
         //         break;
@@ -136,26 +127,16 @@ void straight(char direction, int distance)
         //     potentialStall = false;
         // }
 
-        // Apply motor speeds
+        moveLeftMotor(leftSpeed);
+        moveRightMotor(rightSpeed);
 
-        //leftSpeed = constrain(leftSpeed, 0, 255);
-        //rightSpeed = constrain(rightSpeed, 0, 255);
-        moveLeftMotor((int)leftSpeed);
-        moveRightMotor((int)rightSpeed);
-
-        // Update previous speeds for next iteration
-        currleft = getLeftEncoder();
-        currright = getRightEncoder();
-
+        //Getting the new encoder values and updating the error
         previousLeftError = currentLeftError;
         previousRightError = currentRightError;
-        currentLeftError = leftNumTicks - currleft;
-        currentRightError = rightNumTicks - currright;
-
-        Serial.printf("left: %lf\tright: %lf\n", leftSpeed, rightSpeed);
-    
-        // Update time for next iteration
+        // prevLeftSpeed = leftSpeed;
+        // prevRightSpeed = rightSpeed;
         previousTime = totalTime;
+
 
         delayMicroseconds(10);
 
@@ -163,6 +144,11 @@ void straight(char direction, int distance)
     
     // Stop motors
     stopMotors();
+    Serial.println("Motors stopped!");
+    delayMicroseconds(100);
+
+    double endTime = micros();
+    Serial.printf("Total time for straight: %lf\n", endTime - startTime);
 
     
 }

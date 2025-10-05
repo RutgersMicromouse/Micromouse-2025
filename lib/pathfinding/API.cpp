@@ -1,4 +1,4 @@
-#include "../lib/pathfinding/API.h"
+#include "API.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -55,9 +55,6 @@ void moveForward(int distance) {
 }
 
 void moveForwardHalf(int distance) {
-    if (distance != 1) {
-        //std::cout << distance;
-    }
     int actualDistance = distance * blockLength;
     straight(dirgoal, actualDistance);
 }

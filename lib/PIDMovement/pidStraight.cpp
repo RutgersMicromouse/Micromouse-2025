@@ -2,74 +2,121 @@
 #include "pidRotate.h"
 #define DIA 28
 #define PI 3.1415926535897932384626433832795
-#define leftTick 285
-#define rightTick 395
+#define leftTick 140
+#define rightTick 140
 
 void straight(char direction, int distance)
 {
-
-    /*For the angle:
-
-    */
-
-    //Clearing encoder counts
+    distance = distance * 1.05;
     encLeft.clearCount();
     encRight.clearCount();
 
-    //PID Variables
-        /*Start at 1 and then go to 0.1 and all the way to 10 (larger value should mean there is a smaller error)
-          Integral will make us reach the target faster, but might overshoot/become unstable
-          Smaller error, means the PWM value should be smaller (larger error means the PWM value should be larger)
-        */
-    double leftP = 0.75;
-    double rightP = 0.75;
+    // PID gains
+    double leftP = 1;
+    double rightP = 0.95;
+    double encoderKd = 0.5;
+    double leftAngleP = 0.05;
+    double rightAngleP = 1.05;
 
-    //Motor Speeds
+    // Motor speeds
     double leftSpeed = 0.0;
     double rightSpeed = 0.0;
 
-    //Calculating number of ticks needed to move
-    //518.39 for 1 block (left wheel), 718 for 1 block (right wheel)
+    // Target ticks
     double leftNumTicks = (leftTick * distance) / (DIA * PI);
     double rightNumTicks = (rightTick * distance) / (DIA * PI);
 
-    //Mapping ticks to PWM (Will result in speeds being between 0 and 255) 
-    double leftMaxError = leftNumTicks;
-    double rightMaxError = rightNumTicks;
-    double minError = 5;
-    double leftM = 255/(leftMaxError - minError); //Equation: (255 - 0)/(leftMaxError - minError)
-    double rightM = 255/(rightMaxError - minError); //Equation: (255 - 0)/(rightMaxError - minError)
+    // PWM mapping
+    double leftM = 125 / (leftNumTicks);
+    double rightM = 125 / (rightNumTicks);
 
+    // Error tracking
     double previousLeftError = leftNumTicks - getLeftEncoder();
     double previousRightError = rightNumTicks - getRightEncoder();
     double currentLeftError = previousLeftError;
     double currentRightError = previousRightError;
-    
-    while (abs(currentLeftError) > 5 || abs(currentRightError) > 5)
-    {
 
-        //Getting the new errors for the left and right
+    // Derivatives
+    double leftEncoderDeriv = 0;
+    double rightEncoderDeriv = 0;
+    double previousTime = micros();
+    double totalTime = micros();
+
+    // Direction setup
+    double angleError = 0.0;
+    double targetDirection = 0.0;
+
+    switch (direction) {
+        case 'N': targetDirection = 0; break;
+        case 'S': targetDirection = 180; break;
+        case 'E': targetDirection = 90; break;
+        case 'W': targetDirection = 270; break;
+    }
+
+    // ✅ Movement timeout setup
+    const unsigned long movementTimeout = 2e6; // 5 seconds in microseconds
+    unsigned long startTime = micros();
+
+    // ✅ Stall detection setup
+    const unsigned long stallTimeThreshold = 5e5; // 1 second without movement
+    unsigned long lastEncoderMoveTime = startTime;
+    long lastLeftEncoder = getLeftEncoder();
+    long lastRightEncoder = getRightEncoder();
+
+    while (abs(leftNumTicks - getLeftEncoder()) > 10 &&abs(rightNumTicks - getRightEncoder()) > 10)
+    {
+        totalTime = micros();
+
+        // ✅ Check for total movement timeout
+        if ((totalTime - startTime) > movementTimeout) {
+            Serial.println("Timeout reached — possible stall. Stopping motors.");
+            break;
+        }
+
+        // ✅ Check for stall based on encoder movement
+        if (abs(getLeftEncoder() - lastLeftEncoder) > 5 || 
+            abs(getRightEncoder() - lastRightEncoder) > 5) {
+            lastEncoderMoveTime = totalTime;  
+            lastLeftEncoder = getLeftEncoder();
+            lastRightEncoder = getRightEncoder();
+        }
+
+        if ((totalTime - lastEncoderMoveTime) > stallTimeThreshold) {
+            Serial.println("Encoder not moving — possible stall. Stopping motors.");
+            break;
+        }
+
+        // PID calculations
+        angleError = targetDirection - getAngle();
+        while (angleError > 180) angleError -= 360;
+        while (angleError <= -180) angleError += 360;
+
         currentLeftError = leftNumTicks - getLeftEncoder();
         currentRightError = rightNumTicks - getRightEncoder();
 
-        // Calculate motor speeds
-        leftSpeed = (leftP * leftM * currentLeftError);
-        rightSpeed = (rightP * rightM * currentRightError);
+        leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
+        rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
 
-        //Running the motors
+        leftSpeed = (leftP * leftM * currentLeftError) + 
+                    (encoderKd * leftEncoderDeriv) + 
+                    (leftAngleP * angleError);
+
+        rightSpeed = (rightP * rightM * currentRightError) + 
+                     (encoderKd * rightEncoderDeriv) - 
+                     (rightAngleP * angleError);
+
+        // Send to motors
         moveLeftMotor(leftSpeed);
         moveRightMotor(rightSpeed);
 
-        //Getting the new encoder values and updating the error
         previousLeftError = currentLeftError;
         previousRightError = currentRightError;
+        previousTime = totalTime;
 
         delayMicroseconds(10);
-
     }
-    
+
     // Stop motors
     stopMotors();
-
-    
+    delay(100);
 }

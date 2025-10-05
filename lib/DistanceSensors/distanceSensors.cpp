@@ -26,7 +26,6 @@ boolean checkLeftWall() {
     int16_t leftTime = pulseIn(leftSensor, HIGH);
     int16_t leftDistance = (leftTime - 1000) * 3 / 4;
 
-    Serial.println(leftDistance);
     if(leftDistance < 80) {
         return true;
     }  
@@ -39,7 +38,6 @@ boolean checkRightWall() {
     int16_t rightTime = pulseIn(rightSensor, HIGH);
     int16_t rightDistance = (rightTime - 1000) * 3 / 4;
     
-    Serial.println(rightDistance);
     if(rightDistance < 80) {
         return true;
     } 

@@ -6,32 +6,37 @@
 #include "../lib/Motors/motors.h"
 #include "../lib/PIDMovement/pidRotate.h"
 #include "../lib/PIDMovement/pidStraight.h"
+#include "../lib/pathfinding/floodfill.h"
 
+
+//CURRENT PROBLEMS:
+ //Veering left
+  //Turns ARE WOBBLY WIGGLY WOOBBLY WIGGLY
 void setup() {
   Serial.begin(112500);
   delay(1000);
-  
-  // pinMode(1, INPUT_PULLUP);
-  // pinMode(2, INPUT_PULLUP);
   Wire.begin(1, 2);
-
-  //Serial.println("finding IMU in main");
   setupIMU();
   setupDistanceSensors();
   setupMotors();
   delay(1000);
-   straight('N', 160);
-   //delay(1000);
+
+  straight('N', 40);
+  delay(1500);
+  initialize_maze(15,15,true);
+  floodfill();
+  initialize_maze(1,1,false);
+  floodfill();
 
 
-} 
+}
 
 void loop() {
 
   //Serial.println(getAngle());
  
 
-  //Serial.println(getRightEncoder());
+ // Serial.printf("Right Encoder: %d  Left Encoder: %d\n", getRightEncoder(), getLeftEncoder());
 
    
 

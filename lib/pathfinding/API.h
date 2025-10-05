@@ -11,7 +11,7 @@ bool wallFront();
 bool wallRight();
 bool wallLeft();
 void moveForward(int distance = 1);
-void moveForwardHalf(int distance = 1);
+void moveForwardHalf(int distance = 0.5);
 void turnRight();
 void turnLeft();
 void turnRight45();
