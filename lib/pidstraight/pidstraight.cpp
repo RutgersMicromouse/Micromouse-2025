@@ -6,7 +6,7 @@ double Ki_dist = 0;
 double Kd_dist = 0;
 
 // PID for angle offset
-double Kp_angle = 4.1;
+double Kp_angle = 2.5;
 double Ki_angle = 0;
 double Kd_angle = 0;
 
@@ -45,11 +45,25 @@ void pidForward(double distance) {
         double angleOut = Kp_angle * error_angle
                         + Ki_angle * error_int_angle
                         + Kd_angle * error_deriv_angle;
-
         // --- Motor output ---
-        int basePWM = 180;  // forward speed
+        int basePWM = 200;  // forward speed
         int leftPWM  = basePWM + angleOut;
         int rightPWM = basePWM - angleOut;
+
+        
+
+
+        if (angleOut>(255-basePWM)){
+            //Spread Values
+            double yMax = 700;
+            double xMax = 255;
+            // k = xMax/yMax^2
+            double k = xMax/(yMax*yMax);  
+            //function for spreading: k*input*abs(input)
+            leftPWM = k*(leftPWM)*abs(leftPWM);
+            rightPWM = k*(rightPWM)*abs(rightPWM);
+        }
+        
 
         // Clamp values
         leftPWM  = constrain(leftPWM,  -255, 255);
@@ -61,6 +75,8 @@ void pidForward(double distance) {
         // Update state
         error_angle_old = error_angle;
         t_old = t_now;
+
+        if(front() < 90) { setRightPWM(0); setLeftPWM(0); return; }
     }
 }
 
@@ -78,7 +94,7 @@ void pidForwardLeftWallFollow() {
     for (int i = 0; i <= 7; i++) {
         arr_diag[i] = identity_diag[i] - angle();
 
-        // angle wrapping
+        // angle wrapping [-180, 180]
         if (arr_diag[i] > 180) arr_diag[i] -= 360;
         if (arr_diag[i] < -180) arr_diag[i] += 360;
         
