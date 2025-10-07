@@ -5,8 +5,13 @@ void turnTo(char direction)
     double targetDirection = 0;
     double currentAngle = getAngle();
     double error = 0;
-    double kp = 1.1;
-    double ki = 0.0;
+    double kp = 0.9;
+    double kd = 0.5;
+
+    double previousError = 0;
+    double derivative = 0;
+    double previousTime = micros();
+    double dt = 0;
 
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
@@ -36,7 +41,6 @@ void turnTo(char direction)
 
     while (abs(error) > 0.5) 
     {
-
         if(micros() > sampleTime + 50e3) {
             if(sampleAngle == getAngle()) {
                 stopMotors();
@@ -44,7 +48,6 @@ void turnTo(char direction)
             }
             sampleTime = micros();
             sampleAngle = getAngle();
-
         } 
 
         currentAngle = getAngle();
@@ -58,15 +61,20 @@ void turnTo(char direction)
         {
             error += 360;
         }
-        
-        leftMotorSpeed = kp * error;
-        rightMotorSpeed = kp * -error;
 
+        dt = (micros() - previousTime) / 1e6;
+        derivative = (error - previousError) / dt;
+
+        leftMotorSpeed = (kp * error) + (kd * derivative);
+        rightMotorSpeed = (kp * -error) + (kd * -derivative);
 
         Serial.printf("Left Motor Speed: %lf\t Right Motor Speed: %lf\t Error: %lf\n", leftMotorSpeed, rightMotorSpeed, error);
 
         moveLeftMotor(leftMotorSpeed);
         moveRightMotor(rightMotorSpeed);
+
+        previousError = error;
+        previousTime = micros();
     }
 
     stopMotors();

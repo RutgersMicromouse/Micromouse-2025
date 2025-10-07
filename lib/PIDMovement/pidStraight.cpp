@@ -15,8 +15,8 @@ void straight(char direction, int distance)
     double leftP = 1;
     double rightP = 0.95;
     double encoderKd = 0.5;
-    double leftAngleP = 0.05;
-    double rightAngleP = 1.05;
+    double leftAngleP = 1.3; 
+    double rightAngleP = 1.3; 
 
     // Motor speeds
     double leftSpeed = 0.0;
@@ -74,8 +74,7 @@ void straight(char direction, int distance)
         }
 
         // ✅ Check for stall based on encoder movement
-        if (abs(getLeftEncoder() - lastLeftEncoder) > 5 || 
-            abs(getRightEncoder() - lastRightEncoder) > 5) {
+        if (abs(getLeftEncoder() - lastLeftEncoder) > 5 || abs(getRightEncoder() - lastRightEncoder) > 5) {
             lastEncoderMoveTime = totalTime;  
             lastLeftEncoder = getLeftEncoder();
             lastRightEncoder = getRightEncoder();
@@ -97,13 +96,9 @@ void straight(char direction, int distance)
         leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
         rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
 
-        leftSpeed = (leftP * leftM * currentLeftError) + 
-                    (encoderKd * leftEncoderDeriv) + 
-                    (leftAngleP * angleError);
+        leftSpeed = (leftP * leftM * currentLeftError) + (encoderKd * leftEncoderDeriv) + (leftAngleP * angleError);
 
-        rightSpeed = (rightP * rightM * currentRightError) + 
-                     (encoderKd * rightEncoderDeriv) - 
-                     (rightAngleP * angleError);
+        rightSpeed = (rightP * rightM * currentRightError) + (encoderKd * rightEncoderDeriv) - (rightAngleP * angleError);
 
         // Send to motors
         moveLeftMotor(leftSpeed);
@@ -118,5 +113,5 @@ void straight(char direction, int distance)
 
     // Stop motors
     stopMotors();
-    delay(100);
+    delay(250);
 }

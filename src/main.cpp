@@ -21,12 +21,14 @@ void setup() {
   setupMotors();
   delay(1000);
 
-  straight('N', 40);
+  straight('N', 45);
   delay(1500);
   initialize_maze(15,15,true);
   floodfill();
   initialize_maze(1,1,false);
   floodfill();
+
+
 
 
 }
