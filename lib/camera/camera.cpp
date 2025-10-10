@@ -103,10 +103,10 @@ void imageToAscii() {
   for (int y = 0; y < fb->height - 90; y++) { // Iterate over rows
     for (int x = 0; x < fb->width; x++) { // Iterate over columns
       uint8_t gray = image_data[y * fb->width + x];
-      if (gray > 170) {
+      if (gray > 180) {
         gray = 255;
       }
-      if (gray < 170){
+      if (gray < 180){
         gray = 0;
       }
       char ascii_char = ASCII_CHARS[gray / 25]; // 256 / 10 = 25, so 0-25 -> 0, 26-50 -> 1, ..., 226-255 -> 9
@@ -148,22 +148,31 @@ void followEdge() {
   int width = fb->width;
   int height = fb->height - 90; // your crop
   int third = width / 3;
-
+  int halfY = height / 2;
 
   int left_count = 0;
   int mid_count = 0;
   int right_count = 0;
   
-
+  int up_count = 0;
+  int down_count = 0;
+  // Analyze the image to find the line position
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       uint8_t gray = image_data[y * width + x];
 
       // Thresholding
-      if (gray > 170) {
-        if (x < third) left_count++;
-        else if (x < 2 * third) mid_count++;
-        else right_count++;
+      if (gray > 180) {
+        if (x < third) 
+        left_count++;
+        else if (x < 2 * third) 
+        mid_count++;
+        else 
+        right_count++;
+        if (y < halfY)
+        up_count++;
+        else
+        down_count++;
       }
     }
   }
@@ -172,7 +181,11 @@ void followEdge() {
   int total = left_count + mid_count + right_count + 1; // prevent divide by 0
   float left_ratio = (float)left_count / total;
   float right_ratio = (float)right_count / total;
+  float mid_ratio = (float)mid_count / total;
 
+  float totalY = up_count + down_count + 1;
+  float up_ratio = (float)up_count / totalY;
+  float down_ratio = (float)down_count / totalY;
   
 
   const int base_speed = 100;
@@ -180,9 +193,52 @@ void followEdge() {
 
 
   // Motor logic: more white on one side = turn toward that side
-  int left_speed = base_speed + 3*(right_ratio - left_ratio) * base_speed;
-  int right_speed = base_speed + 3*(left_ratio - right_ratio) * base_speed;
+  int left_speed = base_speed + 1.5*(right_ratio - left_ratio) * base_speed;
+  int right_speed = base_speed + 1.5*(left_ratio - right_ratio) * base_speed*0.94;
 
+  if (left_ratio < 0.05 && right_ratio < 0.05) {
+    // No line detected, stop or take corrective action
+    left_speed = -100;
+    right_speed = -100;
+    Serial.println("No line detected, stopping.");
+  }
+  if (mid_ratio > 0.7)
+  {
+    // Line is mostly in the center, go straight
+    left_speed = max_speed;
+    right_speed = max_speed;
+    Serial.println("Line detected in center, going straight.");
+  }
+  
+  else if (left_ratio > 0.4 && right_ratio < 0.1) {
+    // Sharp left turn
+    left_speed = -100;
+    right_speed = max_speed;
+    Serial.println("Sharp Left Turn Detected!");
+  }
+  else if (right_ratio > 0.4 && left_ratio < 0.1) {
+    // Sharp right turn
+    left_speed = max_speed;
+    right_speed = -100;
+    Serial.println("Sharp Right Turn Detected!");
+  }
+  else if (up_ratio > 0.6 && down_ratio < 0.4) {
+    // Line is mostly in the upper half, slow down
+    left_speed *= 0.7;
+    right_speed *= 0.7;
+    Serial.println("Line detected in upper half, slowing down.");
+  }
+  else if (down_ratio > 0.6 && up_ratio < 0.4) {
+    // Line is mostly in the lower half, speed up
+    left_speed *= 1.3;
+    right_speed *= 1.3;
+    Serial.println("Line detected in lower half, speeding up.");
+  }
+  else
+  {
+    
+  }
+  
   
   // // Detect if we need to turn sharply (e.g., 90-degree turn)
   // if (left_ratio > 0.5) {
@@ -219,5 +275,5 @@ void followEdge() {
 
 
   esp_camera_fb_return(fb);
-  delay(50);
+  delay(20);
 }
