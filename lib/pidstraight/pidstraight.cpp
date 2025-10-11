@@ -4,9 +4,9 @@ double Kp_dist = 0.30;
 double Ki_dist = 0;
 double Kd_dist = 0;
 //PID for angle offset
-double Kp_angle = 4.1;
-double Ki_angle = 0;
-double Kd_angle = 0;
+double Kp_angle = 6;        //7.4
+double Ki_angle = 0.0000;        //0.000015
+double Kd_angle = 0.01;        //0.011
 
 double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 
@@ -15,7 +15,7 @@ void pidForward(double distance) {
     Serial.print("Hello pidForward! ");
     // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
     double goal_distance = TICKS_PER_ROTATION * distance /( WHEEL_DIAM * PI); // Converts mm -> encoder ticks
-    // goal_distance *= 1.10;
+    goal_distance *= 1.65;
     encLeft.write(0); encRight.write(0); // Reset encoder position
 
     // Find the closest world angle axis
@@ -62,6 +62,11 @@ void pidForward(double distance) {
     double distOutRight;
     double angleOut;
 
+    double max_allowable_speed = 255; // Set your motor's max PWM value (e.g., 255 for Arduino)
+    double current_speed_limit = 10;  // Start with a low speed limit
+    double acceleration = 0.1;        // How quickly to increase the speed limit per loop
+
+
     // sampling to check for motor stalling
     double sampleTime = micros();
     double sampleRight = encRight.read();
@@ -85,7 +90,7 @@ void pidForward(double distance) {
         }
 
         // 3. Too close to the front wall
-        if(front() < 90) { setRightPWM(0); setLeftPWM(0); return; }
+        if(front() < 50) { setRightPWM(0); setLeftPWM(0); return; }
 
         // P error
         error_dist_left = goal_distance - encLeft.read(); 
@@ -109,7 +114,34 @@ void pidForward(double distance) {
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
         // Serial.printf("angleOut %f \n", angleOut);
-        setRightPWM(distOutRight - angleOut+20); delay(0); setLeftPWM(distOutLeft + angleOut);
+
+        // NEW CHANGES MADE TO LIMIT SPEED //
+        double rightPWM = distOutRight - angleOut;
+        double leftPWM = distOutLeft + angleOut;
+
+            double yMax = 7000;
+            double xMax = 700;
+            // k = xMax/yMax^2
+            double k = xMax/(yMax*yMax);  
+            //function for spreading: k*input*abs(input)
+            leftPWM = k*(leftPWM)*abs(leftPWM);
+            rightPWM = k*(rightPWM)*abs(rightPWM);
+        
+
+        // Clamp values
+        //leftPWM  = constrain(leftPWM,  -280, 280);
+        //rightPWM = constrain(rightPWM, -280, 280);
+
+
+        leftPWM = 16*leftPWM/16;
+        rightPWM = (16*rightPWM/16);
+
+        setRightPWM(rightPWM);
+        setLeftPWM(leftPWM);
+        
+        
+        // OLD SPEED //
+        //setRightPWM(distOutRight - angleOut+20); delay(0); setLeftPWM(distOutLeft + angleOut);
 
         // Serial.print(encLeft.read()); Serial.print(" "); Serial.println(encRight.read());
 
@@ -202,3 +234,4 @@ void pidForwardLeftWallFollow() {
         error_angle_old = error_angle; t_old = micros();
     }
 }
+
