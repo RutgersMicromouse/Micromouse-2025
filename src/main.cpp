@@ -42,7 +42,7 @@ void setup() {
   Serial.println("Scan done.");
 
   // move to middle of starting cell from back wall
-  pidForward(50);
+  //pidForward(50);
 
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now
@@ -68,8 +68,9 @@ void setup() {
 
   // // Default
   Serial.println("Exploration mode");
-  initialize();
-  runMaze('c');
+  // initialize();
+  // runMaze('c');
+  pidForward(100); // move forward 12 inches to avoid touching walls
 
 }
 
