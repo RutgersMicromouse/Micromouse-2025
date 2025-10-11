@@ -68,9 +68,56 @@ void setup() {
 
   // // Default
   Serial.println("Exploration mode");
-  // initialize();
-  // runMaze('c');
-  pidForward(100); // move forward 12 inches to avoid touching walls
+   initialize();
+   runMaze('c');
+   
+   /*
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   API::turnRight();
+   delay(200);
+   */
+   /*
+   API::turnLeft();
+   API::turnLeft(); 
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft(); 
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft(); 
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft(); 
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft();
+   API::turnLeft(); 
+   API::turnLeft();
+   API::turnLeft();
+    delay(200);
+    */
+  //pidForward(30.48); // move forward 12 inches to avoid touching walls
 
 }
 

@@ -86,6 +86,8 @@ void API::turnLeft() {
         angle_goal = 180;
     }
 
+    angle_goal += 1; // to fix undershoot
+
     turnTo(angle_goal); //left 90 based on current orientation
     // delay(200);
     return;
