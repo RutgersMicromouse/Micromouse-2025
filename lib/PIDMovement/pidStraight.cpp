@@ -2,36 +2,44 @@
 #include "pidRotate.h"
 #define DIA 28
 #define PI 3.1415926535897932384626433832795
-#define leftTick 140
-#define rightTick 140
+#define leftTick 147 //273 for one block 147
+#define rightTick 133 //257 for one block 133
 
 void straight(char direction, int distance)
 {
-    distance = distance * 1.05;
     encLeft.clearCount();
     encRight.clearCount();
 
-    // PID gains
-    double leftP = 1;
-    double rightP = 0.95;
-    double encoderKd = 0.5;
-    double leftAngleP = 1.3; 
-    double rightAngleP = 1.3; 
+    double leftP = 1; //1
+    double rightP = 0.85; //0.85
+    double encoderKd = 0.03; //0.05
+    double leftAngleP = 0.8; //0.8
+    double rightAngleP = 4; //4
 
-    // Motor speeds
+    if (distance < 100) {
+        // PID gains
+        leftP = 1;
+        rightP = 1; //1
+        encoderKd = 0.15; //0.15
+        leftAngleP = 0; //0
+        rightAngleP = 0; //0
+    }
+
+
     double leftSpeed = 0.0;
     double rightSpeed = 0.0;
 
     // Target ticks
     double leftNumTicks = (leftTick * distance) / (DIA * PI);
     double rightNumTicks = (rightTick * distance) / (DIA * PI);
+      const double leftScale = 0.9;
 
     // PWM mapping
-    double leftM = 125 / (leftNumTicks);
-    double rightM = 125 / (rightNumTicks);
+    double leftM = 150 / (leftNumTicks);
+    double rightM = 150 / (rightNumTicks);
 
     // Error tracking
-    double previousLeftError = leftNumTicks - getLeftEncoder();
+    double previousLeftError = leftNumTicks - (getLeftEncoder() * leftScale);
     double previousRightError = rightNumTicks - getRightEncoder();
     double currentLeftError = previousLeftError;
     double currentRightError = previousRightError;
@@ -63,11 +71,11 @@ void straight(char direction, int distance)
     long lastLeftEncoder = getLeftEncoder();
     long lastRightEncoder = getRightEncoder();
 
-    while (abs(leftNumTicks - getLeftEncoder()) > 10 &&abs(rightNumTicks - getRightEncoder()) > 10)
+    while ((abs(previousLeftError) > 10) || (abs(previousRightError) > 10))
     {
+
         totalTime = micros();
 
-        // ✅ Check for total movement timeout
         if ((totalTime - startTime) > movementTimeout) {
             Serial.println("Timeout reached — possible stall. Stopping motors.");
             break;
@@ -85,20 +93,28 @@ void straight(char direction, int distance)
             break;
         }
 
+        if(wallBrake() < 80) {
+            moveLeftMotor(0);
+            moveRightMotor(0);
+            break;
+        }
+
         // PID calculations
         angleError = targetDirection - getAngle();
         while (angleError > 180) angleError -= 360;
         while (angleError <= -180) angleError += 360;
 
-        currentLeftError = leftNumTicks - getLeftEncoder();
+        currentLeftError = leftNumTicks - (getLeftEncoder() * leftScale);
         currentRightError = rightNumTicks - getRightEncoder();
+        
 
-        leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
-        rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
+        leftEncoderDeriv = (currentLeftError - previousLeftError) / ((totalTime - previousTime) / 1e6);
+        rightEncoderDeriv = (currentRightError - previousRightError) / ((totalTime - previousTime) / 1e6);
 
         leftSpeed = (leftP * leftM * currentLeftError) + (encoderKd * leftEncoderDeriv) + (leftAngleP * angleError);
 
         rightSpeed = (rightP * rightM * currentRightError) + (encoderKd * rightEncoderDeriv) - (rightAngleP * angleError);
+         Serial.printf("Left speed: %lf right speed: %lf\n", leftSpeed, rightSpeed);
 
         // Send to motors
         moveLeftMotor(leftSpeed);
@@ -113,5 +129,5 @@ void straight(char direction, int distance)
 
     // Stop motors
     stopMotors();
-    delay(250);
+    delay(50);
 }

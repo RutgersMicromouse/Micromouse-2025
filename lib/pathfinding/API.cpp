@@ -12,14 +12,14 @@
 #define W 6
 #define NW 7
 
-#define blockLength 160
+#define blockLength 185
 
 static char dirgoal = 'N';
 
 bool wallFront() {
     int16_t distance = checkFrontWall();
 
-    if(distance < 80) {
+    if(distance < 110) {
         Serial.printf("front wall detected: true\n");
         return true;
     } else {
