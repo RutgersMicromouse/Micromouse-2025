@@ -1,15 +1,14 @@
 #include "floodfill.h"
 #include "API.h"
-#include <queue>
-#include <stack>
-#include <cstdio>
-#include <Preferences.h>
+#include<queue>
+#include<stack>
+#include<cstdio>
+
 
 cell maze[33][33]; // Center is 14, 14
 mouse_t mouse;
 point dest;
 int i = 0;
-
 void stall(){
     turnLeft();
     turnLeft();
@@ -22,63 +21,6 @@ uint16_t floodfill_expand = 0;
 #define E 2
 #define S 4
 #define W 6
-
-Preferences prefs;
-#define SW1 5   // Save / Load selector
-#define SW2 6  // Reset selector
-
-void setupSwitches() {
-    pinMode(SW1, INPUT_PULLUP);
-    pinMode(SW2, INPUT_PULLUP);
-}
-
-void saveMaze() {
-    prefs.begin("maze", false);
-    prefs.putBytes("data", maze, sizeof(maze));
-    prefs.putBytes("mouse", &mouse, sizeof(mouse));
-    prefs.end();
-    Serial.println("💾 Maze + mouse saved to flash");
-}
-
-bool loadMaze() {
-    prefs.begin("maze", true);
-    size_t size1 = prefs.getBytes("data", maze, sizeof(maze));
-    size_t size2 = prefs.getBytes("mouse", &mouse, sizeof(mouse));
-    prefs.end();
-    if (size1 == sizeof(maze) && size2 == sizeof(mouse)) {
-        Serial.println("📥 Maze + mouse loaded from flash");
-        return true;
-    } else {
-        Serial.println("⚠️ No saved maze found or invalid data");
-        return false;
-    }
-}
-
-void resetMazeData() {
-    prefs.begin("maze", false);
-    prefs.clear();
-    prefs.end();
-    initialize_maze(14, 14, true);
-    Serial.println("🧹 Maze data cleared and reinitialized");
-}
-
-void checkSwitches() {
-    bool sw1 = digitalRead(SW1) == LOW;  // ON = LOW if grounded
-    bool sw2 = digitalRead(SW2) == LOW;
-
-    if (sw1 && sw2) {
-        saveMaze();  // both ON → save
-        delay(500);
-    } 
-    else if (sw1 && !sw2) {
-        loadMaze();  // SW1 ON only → load
-        delay(500);
-    }
-    else if (!sw1 && sw2) {
-        resetMazeData();  // SW2 ON only → reset
-        delay(500);
-    }
-}
 
 static void fill_maze(){
     char buf[50];
@@ -122,7 +64,9 @@ static bool haswestwall(point p) {
 
 void reflood() {
     std::queue<point> myqueue;
+    // std::stack<point> myqueue;
     myqueue.push(dest);
+    // Reset weights except for blocked cells
     for (int i = 0; i < 33; i++) {
         for (int j = 0; j < 33; j++) {
             if (maze[i][j].weight != -2) {
@@ -135,8 +79,10 @@ void reflood() {
 
     while (!myqueue.empty()) {
         point temp = myqueue.front();
+        // point temp = myqueue.top();
         myqueue.pop();
 
+        // Look at neighbors
         if (temp.y + 1 < 33 && !hasnorthwall(temp) && maze[temp.x][temp.y].weight + 0.5 < maze[temp.x][temp.y + 1].weight) {
             maze[temp.x][temp.y + 1].weight = maze[temp.x][temp.y].weight + 0.5;
             myqueue.push({temp.x, static_cast<uint8_t>(temp.y + 1)});
@@ -191,6 +137,7 @@ void initialize_maze(uint8_t x, uint8_t y, bool reset) {
         point temp = myqueue.front();
         myqueue.pop();
 
+        // Look at neighbors
         if (!hasnorthwall(temp) && maze[temp.x][temp.y + 1].weight == -1) {
             maze[temp.x][temp.y + 1].weight = maze[temp.x][temp.y].weight + 0.5f;
             myqueue.push({temp.x, static_cast<uint8_t>(temp.y + 1)});
@@ -209,13 +156,25 @@ void initialize_maze(uint8_t x, uint8_t y, bool reset) {
         }
     }
 
+    // Print the maze weights
+
     for(int i = 0; i < 33; i++){
         maze[i][0].weight = -2;
         maze[i][32].weight = -2;
         maze[0][i].weight = -2;
         maze[32][i].weight = -2;
+        //setWall(i/2,0,'s');
+        //setWall(i/2,15,'n');
+        //setWall(0,i/2,'w');
+        //setWall(15,i/2,'e');
     }
 
+    // for (int i = 0; i < 33; i++) {
+    //     for (int j = 0; j < 33; j++) {
+    //         printf("%.2f  ", maze[i][j].weight);
+    //     }
+    //     printf("\n");
+    // }
     fill_maze();
 }
 
@@ -400,38 +359,38 @@ void set_visited(point p){
     }
     maze[p.x][p.y].visited = true;
 }
-
 void floodfill() {
     while (mouse.location.x != dest.x || mouse.location.y != dest.y) {
         
-        checkSwitches(); // 🟢 check slide switch state
-
         setwalls(mouse);
         set_visited(mouse.location);
 THING:
 
         float max_weight = INFINITY;
         char dec_direction;
-
+        //setColor(mouse.location.x/2,mouse.location.y/2,'g');
+        // Check north
         if (mouse.location.y < 31 && !hasnorthwall(mouse.location) && maze[mouse.location.x][mouse.location.y + 2].weight < max_weight) {
-             Serial.println("Here");
             max_weight = maze[mouse.location.x][mouse.location.y + 2].weight;
             maze[mouse.location.x][mouse.location.y + 1].visited = 1;
             dec_direction = N;
         }
 
+        // Check south
         if (mouse.location.y > 1 && !hassouthwall(mouse.location) && maze[mouse.location.x][mouse.location.y - 2].weight < max_weight) {
             max_weight = maze[mouse.location.x][mouse.location.y - 2].weight;
             maze[mouse.location.x][mouse.location.y - 1].visited = 1;
             dec_direction = S;
         }
 
+        // Check east
         if (mouse.location.x < 31 && !haseastwall(mouse.location) && maze[mouse.location.x + 2][mouse.location.y].weight < max_weight) {
             max_weight = maze[mouse.location.x + 2][mouse.location.y].weight;
             maze[mouse.location.x + 1][mouse.location.y].visited = 1;
             dec_direction = E;
         }
 
+        // Check west
         if (mouse.location.x > 1 && !haswestwall(mouse.location) && maze[mouse.location.x - 2][mouse.location.y].weight < max_weight) {
             max_weight = maze[mouse.location.x - 2][mouse.location.y].weight;
             maze[mouse.location.x - 1][mouse.location.y].visited = 1;
@@ -444,11 +403,6 @@ THING:
         else{
             realturn(dec_direction);
             floodfill_expand++;
-        }
-
-        if (mouse.location.x == dest.x && mouse.location.y == dest.y) {
-            saveMaze(); // 🟢 Auto-save on reaching goal
-            Serial.println("🎯 Goal reached — maze auto-saved");
         }
     }
 }

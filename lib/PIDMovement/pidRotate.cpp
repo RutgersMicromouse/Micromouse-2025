@@ -6,7 +6,7 @@ void turnTo(char direction)
     double currentAngle = getAngle();
     double error = 0;
     double kp = 0.6;
-    double kd = 0.1;
+    double kd = 0.15;
 
     double previousError = 0;
     double derivative = 0;
@@ -79,5 +79,5 @@ void turnTo(char direction)
     }
 
     stopMotors();
-    delay(50);
+    delay(250);
 }

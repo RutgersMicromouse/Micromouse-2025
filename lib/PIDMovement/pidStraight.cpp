@@ -10,14 +10,14 @@ void straight(char direction, int distance)
     encLeft.clearCount();
     encRight.clearCount();
 
-    double leftP = 1; //1
-    double rightP = 0.85; //0.85
-    double encoderKd = 0.03; //0.05
-    double leftAngleP = 0.8; //0.8
-    double rightAngleP = 4; //4
+    double leftP = 1; //1 1
+    double rightP = 0.875; //0.85 0.75
+    double encoderKd = 0.03; //0.03 0.07
+    double leftAngleP = 0.8; //0.8 /1
+    double rightAngleP = 4; //4 /0.7
 
     if (distance < 100) {
-        // PID gains
+        // PID gains 
         leftP = 1;
         rightP = 1; //1
         encoderKd = 0.15; //0.15
@@ -129,5 +129,5 @@ void straight(char direction, int distance)
 
     // Stop motors
     stopMotors();
-    delay(50);
+    delay(250);
 }
