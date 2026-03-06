@@ -11,7 +11,6 @@ void setupDistanceSensors();
 boolean checkLeftWall();
 boolean checkRightWall();
 int16_t checkFrontWall();
-int16_t wallBrake();
 
 
 #endif

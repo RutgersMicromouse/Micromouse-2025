@@ -2,117 +2,135 @@
 #include "pidRotate.h"
 #define DIA 28
 #define PI 3.1415926535897932384626433832795
-#define leftTick 165
-#define rightTick 130 //140
+
+#define rightSensor 3
+#define leftSensor 4
+
+int16_t leftWallDistance();
+int16_t rightWallDistance();
+double getDistError();
 
 void straight(char direction, int distance)
 {
-    encLeft.clearCount();
-    encRight.clearCount();
 
-    // PID gains
-    double leftP = 1;
-    double rightP = 1;
-    double encoderKd = 0.5;
-    double leftAngleP = 1.25; 
-    double rightAngleP = 1.25; 
+    /*
 
-    // Motor speeds
-    double leftSpeed = 0.0;
-    double rightSpeed = 0.0;
+        150 starting speed
+        Getting distance from both sensors
+            subtract it (R - L)
+            == 0 --> keep speed the same
+            > 0 --> closer to the left wall (R > L) --> increase left speed/decrease right speed
+            < 0 --> closer to the right wall (L > R) --> increase right speed/decrease left speed
+        Distance difference to a PWM value (adding or subtract to the 180)
+        Doing it based on time vs distance (Adjust time as needed)
 
-    // Target ticks
-    double leftNumTicks = (leftTick * distance) / (DIA * PI);
-    double rightNumTicks = (rightTick * distance) / (DIA * PI);
+        PID Tuning:
+            - Use Kp, Ki = (1/Ti) * Kp, Kd = Td * Kp
 
-    // PWM mapping
-    double leftM = 125 / (leftNumTicks);
-    double rightM = 125 / (rightNumTicks);
+    
+    */
 
-    // Error tracking
-    double previousLeftError = leftNumTicks - getLeftEncoder();
-    double previousRightError = rightNumTicks - getRightEncoder();
-    double currentLeftError = previousLeftError;
-    double currentRightError = previousRightError;
+    //Figure out starting speed for both motors (IMPORTANT)
+    double baseSpeed = 50;
+    double leftBaseSpeed, rightBaseSpeed;
+    double runTime = 1e6;
+    double actualTime;
 
-    // Derivatives
-    double leftEncoderDeriv = 0;
-    double rightEncoderDeriv = 0;
-    double previousTime = micros();
-    double totalTime = micros();
+    double leftSpeed, rightSpeed;
 
-    // Direction setup
-    double angleError = 0.0;
-    double targetDirection = 0.0;
+    double startTime = micros();
+    double oldTime = micros();
+    double currentTime = micros();
+    double timeElapsed = currentTime - startTime;
+    double slowDownTime = runTime * 0.8e6;
+    double deceleration = 0;
 
-    switch (direction) {
-        case 'N': targetDirection = 0; break;
-        case 'S': targetDirection = 180; break;
-        case 'E': targetDirection = 90; break;
-        case 'W': targetDirection = 270; break;
-    }
+    double distError = getDistError();
+    double oldError = distError, currentError = oldError;
 
-    // ✅ Movement timeout setup
-    const unsigned long movementTimeout = 2e6; // 5 seconds in microseconds
-    unsigned long startTime = micros();
+    double Km = 0.5, Td = 0.75;
+    double Ki = 0;
 
-    // ✅ Stall detection setup
-    const unsigned long stallTimeThreshold = 5e5; // 1 second without movement
-    unsigned long lastEncoderMoveTime = startTime;
-    long lastLeftEncoder = getLeftEncoder();
-    long lastRightEncoder = getRightEncoder();
 
-    while (abs(leftNumTicks - getLeftEncoder()) > 10 && abs(rightNumTicks - getRightEncoder()) > 10)
-    {
+    while(timeElapsed < actualTime) {
+        
+        if(timeElapsed > slowDownTime) {
 
-        totalTime = micros();
+            for(int i = 0; i < 5; i++) {
+                deceleration = 0.5/i;
 
-        // ✅ Check for total movement timeout
-        if ((totalTime - startTime) > movementTimeout) {
-            Serial.println("Timeout reached — possible stall. Stopping motors.");
+                leftSpeed *= deceleration;
+                rightSpeed *= deceleration;
+            }
+            
+            moveLeftMotor(0);
+            moveRightMotor(0);
             break;
         }
+        //Get the current wall error
+        currentError = getDistError();
 
-        // ✅ Check for stall based on encoder movement
-        if (abs(getLeftEncoder() - lastLeftEncoder) > 5 || abs(getRightEncoder() - lastRightEncoder) > 5) {
-            lastEncoderMoveTime = totalTime;  
-            lastLeftEncoder = getLeftEncoder();
-            lastRightEncoder = getRightEncoder();
-        }
+        //Getting time and calculating dt for derivative calculation
+        currentTime = micros();
+        double dt = (currentTime - oldTime)/(1e6);
 
-        if ((totalTime - lastEncoderMoveTime) > stallTimeThreshold) {
-            Serial.println("Encoder not moving — possible stall. Stopping motors.");
-            break;
-        }
+        double derError = (currentError - oldError) / dt;
 
+       //Doing speed calculations
+       leftSpeed = baseSpeed + Km * currentError + (Td * Km) * derError;
+       rightSpeed = baseSpeed - Km * currentError + (Td * Km) * derError;
 
-        // PID calculations
-        angleError = targetDirection - getAngle();
-        while (angleError > 180) angleError -= 360;
-        while (angleError <= -180) angleError += 360;
+       leftSpeed = constrain(leftSpeed, 0, 180);
+       rightSpeed = constrain(rightSpeed, 0, 180);
 
-        currentLeftError = leftNumTicks - getLeftEncoder();
-        currentRightError = rightNumTicks - getRightEncoder();
-
-        leftEncoderDeriv = (currentLeftError - previousLeftError) / (totalTime - previousTime);
-        rightEncoderDeriv = (currentRightError - previousRightError) / (totalTime - previousTime);
-
-        leftSpeed = (leftP * leftM * currentLeftError) + (encoderKd * leftEncoderDeriv) + (leftAngleP * angleError);
-
-        rightSpeed = (rightP * rightM * currentRightError) + (encoderKd * rightEncoderDeriv) - (rightAngleP * angleError);
-
-        // Send to motors
+        //Moving the motorss
         moveLeftMotor(leftSpeed);
         moveRightMotor(rightSpeed);
 
-        previousLeftError = currentLeftError;
-        previousRightError = currentRightError;
-        previousTime = totalTime;
+        //Figuring out the error
+        oldError = currentError;
 
-        delayMicroseconds(10);
+        oldTime = currentTime;
+        currentTime = micros();
+        timeElapsed = currentTime - startTime;
+       // actualTime = runTime +
+
+        printf("Left Motor Speed: %lf     ", leftSpeed);
+        printf("Right Motor Speed: %lf \n", rightSpeed);
+
+
     }
 
-    // Stop motors
-    stopMotors();
-    delay(250);
+    moveLeftMotor(0);
+    moveRightMotor(0);
+    delay(500);    
+}
+
+int16_t leftWallDistance() {
+
+    int16_t leftTime = pulseIn(leftSensor, HIGH);
+    int16_t leftDistance = (leftTime - 1000) * 3 / 4;
+
+    return leftDistance/10;
+
+}
+
+int16_t rightWallDistance() {
+    
+    int16_t rightTime = pulseIn(rightSensor, HIGH);
+    int16_t rightDistance = (rightTime - 1000) * 3 / 4;
+    
+    return rightDistance/10;
+}
+
+double getDistError() {
+
+    int16_t leftDist = leftWallDistance();
+    int16_t rightDist = rightWallDistance();
+
+    double error = (double) (rightDist - leftDist);
+
+    return error;
+
+
 }

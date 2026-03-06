@@ -5,11 +5,11 @@ ESP32Encoder encLeft;
 ESP32Encoder encRight;
 
 int32_t getLeftEncoder(){
-  return -1 * encLeft.getCount();
+  return encLeft.getCount();
 }
 
 int32_t getRightEncoder(){
-  return encRight.getCount();
+  return -1 * encRight.getCount();
 }
 void setupEncoders() {
     ESP32Encoder::useInternalWeakPullResistors = puType::up;
@@ -37,30 +37,34 @@ void setupMotors(){
 }
 
 void moveLeftMotor(int PWM) {
+
     if(PWM > 0) {
-        digitalWrite(BIN1, HIGH);   
-        digitalWrite(BIN2, LOW);    
+        digitalWrite(BIN1, LOW);
+        digitalWrite(BIN2, HIGH);
         analogWrite(PWMB, PWM);
     } else {
-        digitalWrite(BIN1, LOW);    
-        digitalWrite(BIN2, HIGH);   
+         digitalWrite(BIN1, HIGH);
+        digitalWrite(BIN2, LOW);
         analogWrite(PWMB, -PWM);
     }
-}
-
+    
+}   
 
 void moveRightMotor(int PWM) {
-    if(PWM > 0) {
-        digitalWrite(AIN1, LOW);    
-        digitalWrite(AIN2, HIGH);   
-        analogWrite(PWMA, PWM);
-    } else {
-        digitalWrite(AIN1, HIGH);   
-        digitalWrite(AIN2, LOW);    
-        analogWrite(PWMA, -PWM);
-    }
-}
 
+    if(PWM > 0) {
+        digitalWrite(AIN1, HIGH);
+        digitalWrite(AIN2, LOW);
+        analogWrite(PWMA, PWM);
+      
+    } else {
+        digitalWrite(AIN1, LOW);
+        digitalWrite(AIN2, HIGH);
+        analogWrite(PWMA, -PWM);
+        
+    }
+
+}
 
 void stopMotors() {
     analogWrite(PWMA, 0);

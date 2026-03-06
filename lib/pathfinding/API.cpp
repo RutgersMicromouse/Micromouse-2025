@@ -1,4 +1,4 @@
-#include "API.h"
+#include "../lib/pathfinding/API.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -12,14 +12,14 @@
 #define W 6
 #define NW 7
 
-#define blockLength 185
+#define blockLength 160
 
 static char dirgoal = 'N';
 
 bool wallFront() {
     int16_t distance = checkFrontWall();
 
-    if(distance < 110) {
+    if(distance < 80) {
         Serial.printf("front wall detected: true\n");
         return true;
     } else {
@@ -55,6 +55,9 @@ void moveForward(int distance) {
 }
 
 void moveForwardHalf(int distance) {
+    if (distance != 1) {
+        //std::cout << distance;
+    }
     int actualDistance = distance * blockLength;
     straight(dirgoal, actualDistance);
 }

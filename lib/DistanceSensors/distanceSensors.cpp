@@ -14,8 +14,8 @@ void setupDistanceSensors() {
 
   Serial.println("✅ VL53L1X sensor initialized.");
   sensor.setDistanceMode(VL53L1X::Long);
-  sensor.setMeasurementTimingBudget(15000);
-  sensor.startContinuous(10);
+  sensor.setMeasurementTimingBudget(50000);
+  sensor.startContinuous(50);
 
     pinMode(rightSensor, INPUT);
     pinMode(leftSensor, INPUT);
@@ -26,6 +26,7 @@ boolean checkLeftWall() {
     int16_t leftTime = pulseIn(leftSensor, HIGH);
     int16_t leftDistance = (leftTime - 1000) * 3 / 4;
 
+    Serial.println(leftDistance);
     if(leftDistance < 80) {
         return true;
     }  
@@ -38,6 +39,7 @@ boolean checkRightWall() {
     int16_t rightTime = pulseIn(rightSensor, HIGH);
     int16_t rightDistance = (rightTime - 1000) * 3 / 4;
     
+    Serial.println(rightDistance);
     if(rightDistance < 80) {
         return true;
     } 
@@ -48,8 +50,4 @@ boolean checkRightWall() {
 //Change front disatnce to <110 for checking front wall
 int16_t checkFrontWall() {
     return sensor.read();
-}
-
-int16_t wallBrake() {
-    return sensor.readRangeContinuousMillimeters();
 }
