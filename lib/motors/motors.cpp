@@ -1,4 +1,5 @@
 #include "motors.h"
+#include "shared.h"
 
 MotoronI2C mc;
 // Motor default address: 16, 0x10
@@ -30,9 +31,13 @@ void IRAM_ATTR updateLeftEncoder() {
 }
 
 void setLeftPWM(int PWM) {
+    xSemaphoreTake(i2cMutex, portMAX_DELAY);
     mc.setSpeed(1, -PWM);
+    xSemaphoreGive(i2cMutex);
 }
 
 void setRightPWM(int PWM) {
+    xSemaphoreTake(i2cMutex, portMAX_DELAY);
     mc.setSpeed(2, -PWM);
+    xSemaphoreGive(i2cMutex);
 }

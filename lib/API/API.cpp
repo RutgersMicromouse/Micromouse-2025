@@ -1,4 +1,5 @@
 #include "API.h"
+#include "shared.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -7,12 +8,7 @@
 double block_length = 180;
 
 bool API::wallFront() {
-    double dist = front();
-    if (dist < 90) {
-        return true;
-    }
-
-    return false;
+    return g_frontDist < 90;
 }
 
 bool API::wallRight() {
@@ -50,11 +46,9 @@ void API::moveForwardHalf(double numHalfSteps) {
 // }
 
 void API::turnRight() {
-    delay(100);
-
     double angle_goal;
 
-    double currentAngle = angle();
+    double currentAngle = g_angle;
     if(currentAngle < 45 || currentAngle > 315) {
         angle_goal = 90;
     } else if(currentAngle > 45 && currentAngle < 135) {
@@ -71,11 +65,9 @@ void API::turnRight() {
 }
 
 void API::turnLeft() {
-    delay(100);
-
     double angle_goal;
 
-    double currentAngle = angle();
+    double currentAngle = g_angle;
     if(currentAngle < 45 || currentAngle > 315) {
         angle_goal = 270;
     } else if(currentAngle > 45 && currentAngle < 135) {

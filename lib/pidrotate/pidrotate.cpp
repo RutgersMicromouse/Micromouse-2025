@@ -1,4 +1,5 @@
 #include "pidrotate.h"
+#include "shared.h"
 
 double Kp = 2.7;
 double Ki = 0;
@@ -10,7 +11,7 @@ void turnTo(double goal_angle) {
     Serial.println("Hello pidRotate!");
     double t_old = micros();
     
-    double error = goal_angle - angle();
+    double error = goal_angle - g_angle;
     // angle wrapping
     if (error > 180) error -= 360;
     if (error < -180) error += 360;
@@ -48,7 +49,7 @@ void turnTo(double goal_angle) {
         //End Guard Clauses
 
         // Serial.println("Hello error loop!");
-        error = goal_angle - angle();
+        error = goal_angle - g_angle;
         if (error < -180.0) {error += 360;} else if (error > 180) {error -= 360;}
         error_int = error * (micros() - t_old);
         error_deriv = (error - error_old)/(micros() - t_old);

@@ -1,21 +1,27 @@
 #include "pidstraight.h"
+#include "shared.h"
 
 // PID for distance
 double Kp_dist = 0.3;
 double Ki_dist = 0;
 double Kd_dist = 0;
 
-// PID for angle offset
+// PID for IMU angle (used when no walls, or both walls present)
 double Kp_angle = 3.63;
 double Ki_angle = -0.2;
 double Kd_angle = 0.01;
 
-double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
+// Wall correction kick (PWM units)
+// Overrides IMU when only ONE wall is detected
+// Too low = still drifts toward wall, too high = oscillates
+#define WALL_KICK 30.0
+
+double identity_diag[8] = {0.0, 45, 90, 135, 180, 225, 270, 315};
 
 // Distance forward in mm
 void pidForward(double distance) {
     Serial.print("Hello pidForward! ");
-    double goal_distance = TICKS_PER_ROTATION * distance / (WHEEL_DIAM * PI); // Converts mm -> encoder ticks
+    double goal_distance = TICKS_PER_ROTATION * distance / (WHEEL_DIAM * PI);
     Serial.print("Goal distance: ");
     Serial.println(goal_distance);
 
@@ -23,20 +29,16 @@ void pidForward(double distance) {
     encLeft.write(0);
     encRight.write(0);
 
-    // Find the closest world angle axis
-    double goal_angle;
+    // Snap to nearest 45° world angle so IMU correction has a stable target
     int closest_index = 0;
     double arr_diag[8];
     for (int i = 0; i <= 7; i++) {
-        arr_diag[i] = identity_diag[i] - angle();
-        if (arr_diag[i] > 180) arr_diag[i] -= 360;
+        arr_diag[i] = identity_diag[i] - g_angle;
+        if (arr_diag[i] >  180) arr_diag[i] -= 360;
         if (arr_diag[i] < -180) arr_diag[i] += 360;
-        if (abs(arr_diag[i]) < abs(arr_diag[closest_index])) {
-            closest_index = i;
-        }
+        if (abs(arr_diag[i]) < abs(arr_diag[closest_index])) closest_index = i;
     }
-    goal_angle = identity_diag[closest_index];
-
+    double goal_angle = identity_diag[closest_index];
     Serial.print("Goal angle: ");
     Serial.println(goal_angle);
 
@@ -53,33 +55,31 @@ void pidForward(double distance) {
     double error_deriv_dist_right = 0;
     double error_dist_right_old = error_dist_right;
 
-    double error_angle = goal_angle - angle();
-    if (error_angle > 180) error_angle -= 360;
+    double error_angle = goal_angle - g_angle;
+    if (error_angle >  180) error_angle -= 360;
     if (error_angle < -180) error_angle += 360;
-
-    double error_int_angle = 0;
+    double error_int_angle  = 0;
     double error_deriv_angle = 0;
-    double error_angle_old = error_angle;
+    double error_angle_old  = error_angle;
 
     double distOutLeft = 0;
     double distOutRight = 0;
-    double angleOut = 0;
 
     // Stall detection setup
     double sampleTime = micros();
     double sampleRight = encRight.read();
     double sampleLeft = encLeft.read();
 
-    // ✅ NEW: Reset acceleration parameters for each call
-    double startFactor = 0.1;     // Start at 50% of output
-    double accelRate = 3;       // Controls how fast it ramps (higher = faster)
-    double rampProgress = 0.0;    // Goes from 0 → 1 across distance
+    // Acceleration ramp
+    double startFactor = 0.1;
+    double accelRate = 3;
+    double rampProgress = 0.0;
 
     while (true) {
         // --- Guard Clauses ---
+        // Don't stop motors — PID output is ~0 when error is this small.
+        // Returning without stopping lets the next command take over immediately.
         if (abs(error_dist_left) <= 3 && abs(error_dist_right) <= 3) {
-            setRightPWM(0);
-            setLeftPWM(0);
             return;
         }
 
@@ -95,74 +95,69 @@ void pidForward(double distance) {
             sampleLeft = encLeft.read();
         }
 
-        // Stop if too close to wall
-        if (front() < 90) {
+        // Stop if too close to front wall
+        if (g_frontDist < 90) {
             setRightPWM(0);
             setLeftPWM(0);
             return;
         }
 
         // --- PID error calculations ---
-        error_dist_left = goal_distance - encLeft.read();
+        error_dist_left  = goal_distance - encLeft.read();
         error_dist_right = goal_distance - encRight.read();
-        error_angle = goal_angle - angle();
-        if (error_angle > 180) error_angle -= 360;
+        error_angle = goal_angle - g_angle;
+        if (error_angle >  180) error_angle -= 360;
         if (error_angle < -180) error_angle += 360;
 
         double t_now = micros();
         double dt = (t_now - t_old) / 1e6;
-        if (dt <= 0) dt = 1e-3; // Safety fallback
+        if (dt <= 0) dt = 1e-3;
 
-        error_int_dist_left += error_dist_left * dt;
+        error_int_dist_left  += error_dist_left * dt;
         error_int_dist_right += error_dist_right * dt;
-        error_int_angle += error_angle * dt;
+        error_int_angle      += error_angle * dt;
 
-        error_deriv_dist_left = (error_dist_left - error_dist_left_old) / dt;
+        error_deriv_dist_left  = (error_dist_left  - error_dist_left_old)  / dt;
         error_deriv_dist_right = (error_dist_right - error_dist_right_old) / dt;
-        error_deriv_angle = (error_angle - error_angle_old) / dt;
+        error_deriv_angle      = (error_angle - error_angle_old) / dt;
 
-        distOutLeft = Kp_dist * error_dist_left + Ki_dist * error_int_dist_left + Kd_dist * error_deriv_dist_left;
+        distOutLeft  = Kp_dist * error_dist_left  + Ki_dist * error_int_dist_left  + Kd_dist * error_deriv_dist_left;
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
-        angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
+        double angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
 
-        double rightPWM = (distOutRight - angleOut)*1.25;
-        double leftPWM = (distOutLeft + angleOut)*1.25;
+        // --- Wall override ---
+        // When only ONE wall is detected, replace IMU correction with a fixed kick
+        // This overrides the IMU because the wall is ground truth for position
+        if      (g_leftWall && !g_rightWall)  angleOut = -WALL_KICK; // too close to left → steer right
+        else if (!g_leftWall && g_rightWall)  angleOut =  WALL_KICK; // too close to right → steer left
+        // Both walls or no walls: keep IMU correction as-is
 
-        // --- ✅ NEW: Smooth acceleration ramp ---
+        double rightPWM = (distOutRight - angleOut) * 1.25;
+        double leftPWM  = (distOutLeft  + angleOut) * 1.25;
+
+        // Acceleration ramp
         double avgEncoder = (abs(encLeft.read()) + abs(encRight.read())) / 2.0;
         rampProgress = constrain(avgEncoder / goal_distance, 0.0, 1.0);
-
-        // Exponential ease-in ramp curve
         double rampFactor = startFactor + (1.0 - startFactor) * (1.0 - exp(-accelRate * rampProgress));
 
-        // Apply ramp factor to PWM outputs
         rightPWM *= rampFactor;
-        leftPWM *= rampFactor;
+        leftPWM  *= rampFactor;
 
-        // Limit PWM range
         rightPWM = constrain(rightPWM, -400, 400);
-        leftPWM = constrain(leftPWM, -400, 400);
+        leftPWM  = constrain(leftPWM,  -400, 400);
 
-        // Apply PWM
         setRightPWM(rightPWM);
         setLeftPWM(leftPWM);
 
-        // Debug print
-        Serial.print("Ramp: ");
-        Serial.print(rampFactor, 2);
-        Serial.print(" | PWM L/R: ");
-        Serial.print(leftPWM, 1);
-        Serial.print(" / ");
-        Serial.print(rightPWM, 1);
-        Serial.print(" | Enc L/R: ");
-        Serial.print(encLeft.read());
-        Serial.print(" / ");
-        Serial.println(encRight.read());
+        Serial.print("Ramp: ");        Serial.print(rampFactor, 2);
+        Serial.print(" | PWM L/R: ");  Serial.print(leftPWM, 1);
+        Serial.print(" / ");           Serial.print(rightPWM, 1);
+        Serial.print(" | Wall L/R: "); Serial.print(g_leftWall);
+        Serial.print(" / ");           Serial.println(g_rightWall);
 
-        // Update previous variables
-        error_dist_left_old = error_dist_left;
+        error_dist_left_old  = error_dist_left;
         error_dist_right_old = error_dist_right;
-        error_angle_old = error_angle;
+        error_angle_old      = error_angle;
         t_old = t_now;
     }
 }
@@ -171,46 +166,20 @@ void pidForward(double distance) {
 void pidForwardLeftWallFollow() {
     Serial.println("Hello pidForwardLeftWallFollow!");
 
-    // Find the closest world angle axis
-    double goal_angle;
-    int closest_index = 0;
-    double arr_diag[8];
-
-    for (int i = 0; i <= 7; i++) {
-        arr_diag[i] = identity_diag[i] - angle();
-        if (arr_diag[i] > 180) arr_diag[i] -= 360;
-        if (arr_diag[i] < -180) arr_diag[i] += 360;
-        if (abs(arr_diag[i]) < abs(arr_diag[closest_index])) {
-            closest_index = i;
-        }
-    }
-    goal_angle = identity_diag[closest_index];
-
-    Serial.print("Goal angle: ");
-    Serial.println(goal_angle);
-
-    double t_old = micros();
-    double error_angle = goal_angle - angle();
-    if (error_angle > 180) error_angle -= 360;
-    if (error_angle < -180) error_angle += 360;
-
-    double error_int_angle;
-    double error_deriv_angle;
-    double error_angle_old = error_angle;
-    double angleOut;
-
     double sampleTime = micros();
     double sampleRight = encRight.read();
-    double sampleLeft = encLeft.read();
+    double sampleLeft  = encLeft.read();
 
     while (true) {
-        if (!leftWall()) {
-            delay(120);
+        // Stop when left wall disappears
+        if (!g_leftWall) {
+            vTaskDelay(pdMS_TO_TICKS(120)); // RTOS-safe delay — doesn't freeze other tasks
             setRightPWM(0);
             setLeftPWM(0);
             return;
         }
 
+        // Stall detection
         if (micros() > sampleTime + 1e5) {
             if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) {
                 setRightPWM(0);
@@ -219,27 +188,21 @@ void pidForwardLeftWallFollow() {
             }
             sampleTime = micros();
             sampleRight = encRight.read();
-            sampleLeft = encLeft.read();
+            sampleLeft  = encLeft.read();
         }
 
-        if (front() < 90) {
+        // Stop if front wall approaching
+        if (g_frontDist < 90) {
             setRightPWM(0);
             setLeftPWM(0);
             return;
         }
 
-        error_angle = goal_angle - angle();
-        if (error_angle > 180) error_angle -= 360;
-        if (error_angle < -180) error_angle += 360;
+        // Left wall present, right wall absent: steer left (toward left wall)
+        // Left wall present, right wall present: go straight
+        double wallCorrection = (!g_rightWall) ? -WALL_KICK : 0;
 
-        error_int_angle += error_angle * (micros() - t_old);
-        error_deriv_angle = (error_angle - error_angle_old) / (micros() - t_old);
-
-        angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
-        setLeftPWM(200 + angleOut);
-        setRightPWM(200 - angleOut);
-
-        error_angle_old = error_angle;
-        t_old = micros();
+        setLeftPWM (200 + wallCorrection);
+        setRightPWM(200 - wallCorrection);
     }
 }

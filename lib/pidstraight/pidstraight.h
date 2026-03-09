@@ -1,5 +1,8 @@
 #pragma once
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
 #define PI 3.1415926535897932384626433832795
 #define WHEEL_DIAM 32 // wheel diameter in mm
 #define TICKS_PER_ROTATION 840 // 840 encoder ticks per 1 wheel rotation
@@ -8,7 +11,7 @@
 
 #include "imu.h"
 #include "motors.h"
-#include "frontdist.h"
+#include "distanceSensors.h"
 #include "ioexpander.h"
 
 // use PID to drive forward in mm

@@ -8,11 +8,12 @@
 // define physical libraries if real
 #ifdef REAL
 
-#include "frontdist.h"
+#include "distanceSensors.h"
 #include "pidrotate.h"
 #include "pidstraight.h"
 #include "imu.h"
 #include "ioexpander.h"
+#include "shared.h"
 
 #endif
 
