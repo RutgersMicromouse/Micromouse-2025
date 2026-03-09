@@ -1,5 +1,6 @@
 #include "pidstraight.h"
 #include "shared.h"
+#include <cmath>
 
 // PID for distance
 double Kp_dist = 0.3;
@@ -11,12 +12,10 @@ double Kp_angle = 3.63;
 double Ki_angle = -0.2;
 double Kd_angle = 0.01;
 
-// Wall correction kick (PWM units)
-// Overrides IMU when only ONE wall is detected
-// Too low = still drifts toward wall, too high = oscillates
-#define WALL_KICK 30.0
-
-double identity_diag[8] = {0.0, 45, 90, 135, 180, 225, 270, 315};
+// Fixed heading offset (degrees) applied when only ONE wall is detected.
+// Small enough to be smooth, large enough to pull the robot back toward center.
+// Increase if robot still drifts into wall; decrease if it oscillates side to side.
+#define WALL_NUDGE_DEG 3.0
 
 // Distance forward in mm
 void pidForward(double distance) {
@@ -29,7 +28,15 @@ void pidForward(double distance) {
     encLeft.write(0);
     encRight.write(0);
 
-    // Snap to nearest 45° world angle so IMU correction has a stable target
+    // Build heading targets relative to calibrated north (set at startup with both walls present).
+    // This means 0° in our grid = the exact angle the robot was at when placed in the start corridor.
+    double identity_diag[8];
+    for (int i = 0; i < 8; i++) {
+        identity_diag[i] = fmod(g_calibratedNorth + i * 45.0, 360.0);
+        if (identity_diag[i] < 0) identity_diag[i] += 360.0;
+    }
+
+    // Snap to the nearest calibrated 45° heading
     int closest_index = 0;
     double arr_diag[8];
     for (int i = 0; i <= 7; i++) {
@@ -125,12 +132,18 @@ void pidForward(double distance) {
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         double angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
 
-        // --- Wall override ---
-        // When only ONE wall is detected, replace IMU correction with a fixed kick
-        // This overrides the IMU because the wall is ground truth for position
-        if      (g_leftWall && !g_rightWall)  angleOut = -WALL_KICK; // too close to left → steer right
-        else if (!g_leftWall && g_rightWall)  angleOut =  WALL_KICK; // too close to right → steer left
-        // Both walls or no walls: keep IMU correction as-is
+        // --- Wall bias ---
+        // Apply a fixed heading offset based on which walls are visible.
+        // This is re-applied fresh every loop — no accumulation, no clamp needed.
+        // Both walls or no walls → drive straight (base heading).
+        // One wall only → steer 3° away from it.
+        double wall_bias = 0.0;
+        if      (g_leftWall && !g_rightWall)  wall_bias = -WALL_NUDGE_DEG; // left wall only → steer right
+        else if (!g_leftWall && g_rightWall)  wall_bias =  WALL_NUDGE_DEG; // right wall only → steer left
+
+        error_angle = (identity_diag[closest_index] + wall_bias) - g_angle;
+        if (error_angle >  180) error_angle -= 360;
+        if (error_angle < -180) error_angle += 360;
 
         double rightPWM = (distOutRight - angleOut) * 1.25;
         double leftPWM  = (distOutLeft  + angleOut) * 1.25;
@@ -200,7 +213,7 @@ void pidForwardLeftWallFollow() {
 
         // Left wall present, right wall absent: steer left (toward left wall)
         // Left wall present, right wall present: go straight
-        double wallCorrection = (!g_rightWall) ? -WALL_KICK : 0;
+        double wallCorrection = (!g_rightWall) ? -30.0 : 0;
 
         setLeftPWM (200 + wallCorrection);
         setRightPWM(200 - wallCorrection);

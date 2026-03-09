@@ -82,6 +82,12 @@ void initialize() {
 
 #ifdef REAL
     }
+
+    // Capture current heading as "true forward" using the guaranteed start corridor.
+    // Both walls are always present at (0,0), so g_angle here = perfect straight.
+    g_calibratedNorth = g_angle;
+    Serial.print("Calibrated north: ");
+    Serial.println(g_calibratedNorth);
 #endif
 
 }
