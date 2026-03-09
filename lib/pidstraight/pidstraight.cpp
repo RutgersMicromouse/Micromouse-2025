@@ -77,9 +77,9 @@ void pidForward(double distance) {
     double sampleRight = encRight.read();
     double sampleLeft = encLeft.read();
 
-    // Acceleration ramp
-    double startFactor = 0.1;
-    double accelRate = 3;
+    // Acceleration / deceleration ramp
+    double startFactor = 0.15;
+    double accelRate   = 5;
     double rampProgress = 0.0;
 
     while (true) {
@@ -102,8 +102,8 @@ void pidForward(double distance) {
             sampleLeft = encLeft.read();
         }
 
-        // Stop if too close to front wall
-        if (g_frontDist < 90) {
+        // Stop if too close to front wall (raised threshold for higher speeds)
+        if (g_frontDist < 130) {
             setRightPWM(0);
             setLeftPWM(0);
             return;
@@ -148,16 +148,22 @@ void pidForward(double distance) {
         double rightPWM = (distOutRight - angleOut) * 1.25;
         double leftPWM  = (distOutLeft  + angleOut) * 1.25;
 
-        // Acceleration ramp
+        // Acceleration + deceleration ramp
         double avgEncoder = (abs(encLeft.read()) + abs(encRight.read())) / 2.0;
         rampProgress = constrain(avgEncoder / goal_distance, 0.0, 1.0);
         double rampFactor = startFactor + (1.0 - startFactor) * (1.0 - exp(-accelRate * rampProgress));
 
+        // Decel: in the last 30% of travel, ramp back down to startFactor
+        if (rampProgress > 0.7) {
+            double decelProgress = (rampProgress - 0.7) / 0.3; // 0→1 over last 30%
+            rampFactor *= (1.0 - decelProgress * (1.0 - startFactor));
+        }
+
         rightPWM *= rampFactor;
         leftPWM  *= rampFactor;
 
-        rightPWM = constrain(rightPWM, -400, 400);
-        leftPWM  = constrain(leftPWM,  -400, 400);
+        rightPWM = constrain(rightPWM, -600, 600);
+        leftPWM  = constrain(leftPWM,  -600, 600);
 
         setRightPWM(rightPWM);
         setLeftPWM(leftPWM);
