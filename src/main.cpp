@@ -40,8 +40,25 @@ void sensorTask(void *pvParameters) {
 // in the background by sensorTask
 // ─────────────────────────────────────────
 void robotTask(void *pvParameters) {
-    // Wait 200ms for sensorTask to get its first readings
-    vTaskDelay(pdMS_TO_TICKS(200));
+    // Wait for sensorTask to populate g_angle and for IMU to settle.
+    // The BNO055 can take up to 2s before Euler angles stop jumping.
+    // We wait until g_angle is stable (not changing much) for 500ms.
+    double lastAngle = 9999.0;
+    TickType_t stableStart = 0;
+    while (true) {
+        double current = g_angle;
+        double diff = abs(current - lastAngle);
+        if (diff > 180) diff = 360 - diff; // handle wrap
+        if (diff < 0.5) {
+            if (stableStart == 0) stableStart = xTaskGetTickCount();
+            if ((xTaskGetTickCount() - stableStart) >= pdMS_TO_TICKS(500)) break; // stable for 500ms
+        } else {
+            stableStart = 0; // reset if it jumped
+        }
+        lastAngle = current;
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    Serial.print("IMU stable at: "); Serial.println(g_angle);
 
     if (isFirefighter()) {
         while (1) vTaskDelay(pdMS_TO_TICKS(1000)); // do nothing
@@ -74,16 +91,19 @@ void setup() {
     Wire.setClock(400000);
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(2000);
-    digitalWrite(LED_BUILTIN, HIGH);
 
     // Create the I2C mutex FIRST, before any I2C hardware setup
     i2cMutex = xSemaphoreCreateMutex();
 
-    // Hardware setup (same as before)
+    // Hardware setup — IMU first so it gets maximum warm-up time
     imuSetup();
     setupDistanceSensors();
     motorSetup();
+
+    // Wait for BNO055 to stabilize — it needs ~2s before Euler angles are reliable
+    // LED blinks while waiting so you know it's alive
+    delay(2000);
+    digitalWrite(LED_BUILTIN, HIGH);
 
     Serial.println("Starting tasks...");
 
