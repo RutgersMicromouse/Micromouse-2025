@@ -14,7 +14,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Wire.begin();
-  Wire.setClock(20000); // use 400 kHz I2C
+  Wire.setClock(100000); // use 400 kHz I2C
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW); // turns the builtin LED on (active low)
 
