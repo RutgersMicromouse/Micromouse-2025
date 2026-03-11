@@ -66,10 +66,10 @@ void setup() {
     return;    
   }
 
-  // // Default
-  Serial.println("Exploration mode");
-  initialize();
-  runMaze('c');
+   // Default
+   Serial.println("Exploration mode");
+   initialize();
+   runMaze('c');
 
 }
 

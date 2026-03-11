@@ -6,31 +6,35 @@ double Ki_dist = 0.0;
 double Kd_dist = 0.0; // Added a tiny bit of D to dampen stops
 
 // PID for angle offset
-double Kp_angle = 3.0;
-double Ki_angle = 1.0;
+double Kp_angle = 0.0;
+double Ki_angle = 0.0;
 double Kd_angle = 0.0;
 
 double identity_diag[8] = {0.0, 45, 90, 135, 180, 225, 270, 315};
 
+
 void pidForward(double distance) {
     Serial.println("--- Starting pidForward ---");
+
+    // --- CONFIGURATION ---
+    double baseSpeed  = 120.0; // The cruising speed
+    double speedLimit = 200.0; // The absolute maximum PWM allowed
+    // ---------------------
     
     // 1. Convert mm to encoder ticks
-    // Ensure WHEEL_DIAM and TICKS_PER_ROTATION are defined in your header
     double goal_ticks = (distance * TICKS_PER_ROTATION) / (WHEEL_DIAM * PI);
-    goal_ticks *= 1.65; // Calibration factor
+    goal_ticks *= 1.65; // Your calibration factor
 
     encLeft.write(0); 
     encRight.write(0);
 
-    // 2. Find the closest world angle axis (Snap to 45-degree increments)
+    // 2. Snap to the closest 45-degree world axis
     double current_start_angle = angle();
     double goal_angle = identity_diag[0];
     double min_diff = 360.0;
 
     for (int i = 0; i < 8; i++) {
         double diff = identity_diag[i] - current_start_angle;
-        // Angle wrapping
         while (diff > 180)  diff -= 360;
         while (diff < -180) diff += 360;
         
@@ -39,42 +43,42 @@ void pidForward(double distance) {
             goal_angle = identity_diag[i];
         }
     }
-    Serial.print("Target Angle: "); Serial.println(goal_angle);
 
     // PID State Variables
-    double t_old = micros() / 1.0e6; // Work in seconds
-    double error_dist_left_old = goal_ticks;
-    double error_dist_right_old = goal_ticks;
+    double t_old = micros() / 1.0e6;
     double error_angle_old = 0;
-    
-    double i_dist_l = 0, i_dist_r = 0, i_ang = 0;
+    double i_ang = 0;
 
     // Stall Detection Variables
     unsigned long sampleTime = millis();
     long lastLeftTicks = 0;
     long lastRightTicks = 0;
 
+    Serial.print("current_start_angle: "); Serial.println(current_start_angle);
+    Serial.print("goal_angle: "); Serial.println(goal_angle);
+    Serial.print("Target Angle: "); Serial.println(goal_angle);
+
     while (true) {
         // --- 3. TIMING ---
         double t_now = micros() / 1.0e6;
         double dt = t_now - t_old;
-        if (dt <= 0) dt = 0.001; // Avoid division by zero
+        if (dt <= 0) dt = 0.001; 
 
         long currL = encLeft.read();
         long currR = encRight.read();
 
         // --- 4. GUARD CLAUSES ---
-        // A. Distance Reached
         double errL = goal_ticks - currL;
         double errR = goal_ticks - currR;
-        if (abs(errL) < 10 && abs(errR) < 10) break;
 
-        // B. Stall Protection (Check every 100ms)
+        // Stop if both wheels are within a small threshold of the goal
+        if (abs(errL) < 15 && abs(errR) < 15) break;
+
+        // Stall Protection (Check every 100ms)
         if (millis() - sampleTime > 100) {
             if (abs(currL - lastLeftTicks) < 2 && abs(currR - lastRightTicks) < 2) {
-                // Only trigger stall if we aren't already at the goal
-                if (abs(errL) > 50) {
-                    Serial.println("STALL DETECTED - Stopping.");
+                if (abs(errL) > 50) { 
+                    Serial.println("STALL DETECTED");
                     break;
                 }
             }
@@ -82,70 +86,68 @@ void pidForward(double distance) {
             lastLeftTicks = currL; lastRightTicks = currR;
         }
 
-        // C. Obstacle Detection
+        // Obstacle Detection
         if (front() < 50) {
-            Serial.println("FRONT WALL - Stopping.");
+            Serial.println("FRONT WALL");
             break;
         }
 
         // --- 5. PID CALCULATIONS ---
-        // Angle Error with Wrapping
+        
+        // Angle PID (The "Correction" factor)
         double errAng = goal_angle - angle();
         while (errAng > 180)  errAng -= 360;
         while (errAng < -180) errAng += 360;
 
-        // Integrals
-        i_dist_l += errL * dt;
-        i_dist_r += errR * dt;
-        i_ang    += errAng * dt;
+        i_ang += errAng * dt;
+        double d_ang = (errAng - error_angle_old) / dt;
+        double outA  = (Kp_angle * errAng) + (Ki_angle * i_ang) + (Kd_angle * d_ang);
 
-        // Derivatives
-        double d_dist_l = (errL - error_dist_left_old) / dt;
-        double d_dist_r = (errR - error_dist_right_old) / dt;
-        double d_ang    = (errAng - error_angle_old) / dt;
+        // Distance Calculation (The "Drive" factor)
+        // Kp_dist acts as the "braking" aggressiveness
+        double driveL = errL * Kp_dist;
+        double driveR = errR * Kp_dist;
 
-        // Output Summation
-        double outL = (Kp_dist * errL) + (Ki_dist * i_dist_l) + (Kd_dist * d_dist_l);
-        double outR = (Kp_dist * errR) + (Ki_dist * i_dist_r) + (Kd_dist * d_dist_r);
-        double outA = (Kp_angle * errAng) + (Ki_angle * i_ang) + (Kd_angle * d_ang);
-
-        // --- 6. MOTOR COMPENSATION (The 3:1 Ratio) ---
-        // baseLeft + angle correction
-        double leftPWM  = (outL + outA) * 1; 
-        // baseRight - angle correction
-        double rightPWM = (outR - outA);
-
-        // --- 7. RATIO-PRESERVING CONSTRAINT ---
-        // This ensures the 3:1 ratio is kept even if one motor hits max power (255)
-        double maxRequested = max(abs(leftPWM), abs(rightPWM));
-        double limit = 150.0; // Stay slightly below 255 for stability
+        // --- 6. APPLY SPEED CONSTRAINTS ---
         
-        if (maxRequested > limit) {
-            double scale = limit / maxRequested;
-            leftPWM  *= scale;
-            rightPWM *= scale;
-        }
+        // Step A: Determine the Drive Power (Capped at baseSpeed)
+        double motorPowerL = constrain(driveL, -baseSpeed, baseSpeed);
+        double motorPowerR = constrain(driveR, -baseSpeed, baseSpeed);
 
-        // Deadband compensation: if power is too low to move, give it a tiny kick
-        if (abs(leftPWM) > 0 && abs(leftPWM) < 35) leftPWM = (leftPWM > 0) ? 40 : -40;
-        if (abs(rightPWM) > 0 && abs(rightPWM) < 35) rightPWM = (rightPWM > 0) ? 40 : -40;
+        // Step B: Add the Angle Correction
+        double leftPWM  = motorPowerL + outA;
+        double rightPWM = motorPowerR - outA;
+
+        // Step C: Apply Absolute speedLimit (The Ceiling)
+        leftPWM  = constrain(leftPWM, -speedLimit, speedLimit)*1.4;
+        rightPWM = constrain(rightPWM, -speedLimit, speedLimit);
+
+        // --- 7. DEADZONE KICK ---
+        // Minimum power to overcome static friction if still far from goal
+        if (abs(leftPWM) < 35 && abs(errL) > 15)  leftPWM = (leftPWM > 0) ? 40 : -40;
+        if (abs(rightPWM) < 35 && abs(errR) > 15) rightPWM = (rightPWM > 0) ? 40 : -40;
 
         setLeftPWM(leftPWM);
         setRightPWM(rightPWM);
 
+
+        Serial.print("Error Angle: "); Serial.println(errAng); //If error to the right, its negative, else positive.
+        Serial.print("Left PWM: "); Serial.print(leftPWM);
+        Serial.print("\t|\tRight PWM: "); Serial.println(rightPWM);
+        Serial.println("");
+
+
+
         // Update History
-        error_dist_left_old = errL;
-        error_dist_right_old = errR;
         error_angle_old = errAng;
         t_old = t_now;
     }
 
-    // 8. Final Stop
+    // 8. Hard Stop
     setLeftPWM(0);
     setRightPWM(0);
     Serial.println("--- pidForward Finished ---");
 }
-
 
 void pidForwardLeftWallFollow() {
     Serial.println("Hello pidForwardLeftWallFollow!");
