@@ -50,7 +50,8 @@ void initialize() {
     if(isLoad()) {
         loadMazeFromEEPROM(maze);
         loadWallsFromEEPROM(walls);
-        Serial.println("loaded");
+        // Serial.println("loaded");
+		while(1);
 		mazePrintout();
         digitalWrite(LED_BUILTIN, LOW);
         delay(200);
@@ -409,6 +410,7 @@ void checkNeigboringOpen(configuration poppedCfg) {
 */
 void move(char direction) {
     char facing = currentCfg.dir;
+	Serial.printf("Moving from (%d, %d) facing %c to direction %c\n", currentCfg.x, currentCfg.y, facing, direction);
     
     // if facing and direction are the same, go straight
     if(facing == direction) {
@@ -425,6 +427,9 @@ void move(char direction) {
 		    case 'E': // turnRight
 			    API::turnRight(); API::moveForward();
 			    break;
+			default:
+				Serial.printf("invalid direction %c\n", direction);
+				while(1);
             }
         }
         if(facing == 'S') {
@@ -438,6 +443,9 @@ void move(char direction) {
 		    case 'W': // turnRight
 			    API::turnRight(); API::moveForward();
 			    break;
+			default:
+				Serial.printf("invalid direction %c\n", direction);
+				while(1);
             }
         }
         if(facing == 'E') {
@@ -451,6 +459,9 @@ void move(char direction) {
 		    case 'S': // turnRight
 			    API::turnRight(); API::moveForward();
 			    break;
+			default:
+				Serial.printf("invalid direction %c\n", direction);
+				while(1);
             }
         }
         if(facing == 'W') {
@@ -464,6 +475,9 @@ void move(char direction) {
 		    case 'N': // turnRight
 			    API::turnRight(); API::moveForward();
 			    break;
+			default:
+				Serial.printf("invalid direction %c\n", direction);
+				while(1);
             }
         }
     }
@@ -547,23 +561,23 @@ void mazePrintout() {
 
 			if(currentCfg.x == i && currentCfg.y == j) {
 				
-				Serial.print("[");
-				Serial.print(static_cast<int>(maze[i][j]));
-				Serial.print("], ");
+				// Serial.print("[");
+				// Serial.print(static_cast<int>(maze[i][j]));
+				// Serial.print("], ");
 			} else {
 				if(maze[i][j] < 10) {
-					Serial.print(" ");
-					Serial.print(static_cast<int>(maze[i][j]));
-					Serial.print(", ");	
+					// Serial.print(" ");
+					// Serial.print(static_cast<int>(maze[i][j]));
+					// Serial.print(", ");	
 				} else {
-					Serial.print(static_cast<int>(maze[i][j]));
-					Serial.print(", ");	
+					// Serial.print(static_cast<int>(maze[i][j]));
+					// Serial.print(", ");	
 				}
 			}
 		}
-		Serial.println();
+		// Serial.println();
 	}
-	Serial.println();
+	// Serial.println();
 }
 #endif
 
@@ -657,7 +671,7 @@ void runMaze(char goal) {
 		if (isSaving()) {
 			saveMazeToEEPROM(maze);
 			saveWallsToEEPROM(walls);
-			Serial.println("saved");
+			// Serial.println("saved");
 			digitalWrite(LED_BUILTIN, LOW);
 			delay(200);
 			digitalWrite(LED_BUILTIN, HIGH);
@@ -797,10 +811,10 @@ void speedrun() {
 	
 	for(int j = 32; j >= 0; j--) {
 		for(int i = 0; i < 33; i++) {
-			Serial.print(highResMaze[i][j]);
-			Serial.print(" ");
+			// Serial.print(highResMaze[i][j]);
+			// Serial.print(" ");
 		}
-		Serial.println();
+		// Serial.println();
 	}
 	
 

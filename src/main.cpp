@@ -29,17 +29,17 @@ void setup() {
 
 
 
-  Serial.println("Scanning I2C bus...");
+  // Serial.println("Scanning I2C bus...");
   
   for (byte address = 1; address < 127; address++) {
     Wire.beginTransmission(address);
     byte error = Wire.endTransmission();
     if (error == 0) {
-      Serial.print("Found I2C device at 0x");
-      Serial.println(address, HEX);
+      // Serial.print("Found I2C device at 0x");
+      // Serial.println(address, HEX);
     }
   }
-  Serial.println("Scan done.");
+  // Serial.println("Scan done.");
 
   // move to middle of starting cell from back wall
   //pidForward(50);
@@ -47,27 +47,27 @@ void setup() {
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now
     while(1);
-    // Serial.println("Firefighter mode");
+    // // Serial.println("Firefighter mode");
     // init_GPIO();
     // firefighterSetup();
     // firefighterLoop();
     return;
   } 
   if(isSpeedrun()) {
-    Serial.println("Lightning McQueen mode");
+    // Serial.println("Lightning McQueen mode");
     initialize(); // load switch should also be on
     delay(100);
     speedrun();
     return;
   }
   if(isLabyrinth()) {
-    Serial.println("Labyrinth mode");
+    // Serial.println("Labyrinth mode");
     labyrinthLoop();
     return;    
   }
 
   // // Default
-  Serial.println("Exploration mode");
+  // Serial.println("Exploration mode");
    initialize();
    runMaze('c');
    
@@ -123,15 +123,15 @@ void setup() {
 
 void loop() {
   delay(2000);
-  Serial.println("Hello main loop!");
-  // Serial.println(API::wallFront());
-  // Serial.print(API::wallLeft());
-  // Serial.print(" N ");
-  // Serial.println(API::wallRight());
+  // Serial.println("Hello main loop!");
+  // // Serial.println(API::wallFront());
+  // // Serial.print(API::wallLeft());
+  // // Serial.print(" N ");
+  // // Serial.println(API::wallRight());
 
-  // Serial.println(front());
+  // // Serial.println(front());
 
-  // Serial.println(angle());
+  // // Serial.println(angle());
 
 
 }

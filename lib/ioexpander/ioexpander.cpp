@@ -37,16 +37,16 @@ byte ioExpanderRead() {
         readValue = Wire.read();
         readValue = readValue ^ 0xFF;  // xor so that 1 is on and 0 is off
         /*
-        Serial.print("IO expander: ");
+        // Serial.print("IO expander: ");
         // Print the 8 bits of the byte
         for (int i = 7; i >= 0; i--) {          // Start from the most significant bit (MSB)
-        Serial.print(bitRead(readValue, i));  // Extract and print each bit
+        // Serial.print(bitRead(readValue, i));  // Extract and print each bit
         }
-        Serial.println("");      
+        // Serial.println("");      
         */
 
     } else {
-      Serial.println("IO Expander read failed");
+      // Serial.println("IO Expander read failed");
     }
     return readValue;
 }

@@ -1,7 +1,7 @@
 #include "pidstraight.h"
 
 // PID for distance
-double Kp_dist = 0.3;
+double Kp_dist = 0.8;
 double Ki_dist = 0;
 double Kd_dist = 0;
 
@@ -14,10 +14,11 @@ double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 
 // Distance forward in mm
 void pidForward(double distance) {
-    Serial.print("Hello pidForward! ");
+    Serial.printf("Hello pidForward! Distance: %f\n", distance);
+    // Serial.print("Hello pidForward! ");
     double goal_distance = TICKS_PER_ROTATION * distance / (WHEEL_DIAM * PI); // Converts mm -> encoder ticks
-    Serial.print("Goal distance: ");
-    Serial.println(goal_distance);
+    // Serial.print("Goal distance: ");
+    // Serial.println(goal_distance);
 
     // Reset encoders
     encLeft.write(0);
@@ -37,8 +38,8 @@ void pidForward(double distance) {
     }
     goal_angle = identity_diag[closest_index];
 
-    Serial.print("Goal angle: ");
-    Serial.println(goal_angle);
+    // Serial.print("Goal angle: ");
+    // Serial.println(goal_angle);
 
     // Initialize PID variables
     double t_old = micros();
@@ -148,16 +149,16 @@ void pidForward(double distance) {
         setLeftPWM(leftPWM);
 
         // Debug print
-        Serial.print("Ramp: ");
-        Serial.print(rampFactor, 2);
-        Serial.print(" | PWM L/R: ");
-        Serial.print(leftPWM, 1);
-        Serial.print(" / ");
-        Serial.print(rightPWM, 1);
-        Serial.print(" | Enc L/R: ");
-        Serial.print(encLeft.read());
-        Serial.print(" / ");
-        Serial.println(encRight.read());
+        // Serial.print("Ramp: ");
+        // Serial.print(rampFactor, 2);
+        // Serial.print(" | PWM L/R: ");
+        // Serial.print(leftPWM, 1);
+        // Serial.print(" / ");
+        // Serial.print(rightPWM, 1);
+        // Serial.print(" | Enc L/R: ");
+        // Serial.print(encLeft.read());
+        // Serial.print(" / ");
+        // Serial.println(encRight.read());
 
         // Update previous variables
         error_dist_left_old = error_dist_left;
@@ -169,7 +170,7 @@ void pidForward(double distance) {
 
 
 void pidForwardLeftWallFollow() {
-    Serial.println("Hello pidForwardLeftWallFollow!");
+    // Serial.println("Hello pidForwardLeftWallFollow!");
 
     // Find the closest world angle axis
     double goal_angle;
@@ -186,8 +187,8 @@ void pidForwardLeftWallFollow() {
     }
     goal_angle = identity_diag[closest_index];
 
-    Serial.print("Goal angle: ");
-    Serial.println(goal_angle);
+    // Serial.print("Goal angle: ");
+    // Serial.println(goal_angle);
 
     double t_old = micros();
     double error_angle = goal_angle - angle();

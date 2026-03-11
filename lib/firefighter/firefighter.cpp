@@ -44,17 +44,17 @@ short int MOUSE_2_STATE_PREV = 0;
 
 short int MOUSE_GOAL_2(void){
   bool temp = CHECK_BEACON();
-  //Serial.print("MOUSE 2 STATE PREV = ");
-  //Serial.println(MOUSE_2_STATE_PREV);
+  //// Serial.print("MOUSE 2 STATE PREV = ");
+  //// Serial.println(MOUSE_2_STATE_PREV);
   if(temp == HIGH){
     m = m + 1;;
     m = m % 10000;
-    Serial.print("m =");
-    Serial.println(m);
+    // Serial.print("m =");
+    // Serial.println(m);
     if(m==highZONE01){
       ZONE01 = HIGH;
     }
-    Serial.println("GOAL FOUND");
+    // Serial.println("GOAL FOUND");
     digitalWrite(BEACON_ON_LIGHT_RED,HIGH);
     MOUSE_2_STATE = 1;
     MOUSE_2_STATE_PREV = MOUSE_2_STATE;
@@ -62,7 +62,7 @@ short int MOUSE_GOAL_2(void){
     return MOUSE_2_STATE; 
   }
   if(temp == LOW && MOUSE_2_STATE_PREV == 0){
-    Serial.println("MOUSE SEARCHING");
+    // Serial.println("MOUSE SEARCHING");
     digitalWrite(BEACON_ON_LIGHT_RED,LOW);
     digitalWrite(BEACON_OFF_LIGHT_GREEN,LOW);
     MOUSE_2_STATE = 0;
@@ -71,7 +71,7 @@ short int MOUSE_GOAL_2(void){
   }
   if(temp == LOW && MOUSE_2_STATE_PREV == 1){
     if(ZONE01 = HIGH){
-    Serial.println("GOAL TRIGGERED");
+    // Serial.println("GOAL TRIGGERED");
     digitalWrite(BEACON_ON_LIGHT_RED,LOW);
     digitalWrite(BEACON_OFF_LIGHT_GREEN,HIGH);
     MOUSE_2_STATE = 2;
@@ -89,16 +89,16 @@ short int MOUSE_GOAL_2(void){
 #if OPTION == 1
 
 bool MOUSE_GOAL_1(void){
- //Serial.println(CHECK_BEACON());
- //Serial.print("MOUSE_STATE = ");
- //Serial.println(MOUSE_STATE);
+ //// Serial.println(CHECK_BEACON());
+ //// Serial.print("MOUSE_STATE = ");
+ //// Serial.println(MOUSE_STATE);
  
  if(CHECK_BEACON() == HIGH && BEACON_OFF == LOW){
     BEACON_OFF = HIGH;
   }
  if(BEACON_OFF == HIGH && MOUSE_1_STATE == LOW){
-   //Serial.print("EEACON_OFF = ");
-   //Serial.println(BEACON_OFF);
+   //// Serial.print("EEACON_OFF = ");
+   //// Serial.println(BEACON_OFF);
    digitalWrite(BEACON_OFF_LIGHT_GREEN,HIGH);
    MOUSE_1_STATE = HIGH; 
   }
@@ -188,13 +188,13 @@ attachInterrupt(digitalPinToInterrupt(IR_SENSOR),IR_triggerLatch,RISING);//IR SE
 void firefighterLoop(){
   while(true) {
     #if OPTION == 1
-    // Serial.print("Is the beacon extinguished?: ");
-    Serial.println(MOUSE_GOAL_1()); //"LOW" BEACON NOT DETECTED, "HIGH" BEACON EXTINGUISHED
+    // // Serial.print("Is the beacon extinguished?: ");
+    // Serial.println(MOUSE_GOAL_1()); //"LOW" BEACON NOT DETECTED, "HIGH" BEACON EXTINGUISHED
     #endif
   
     #if OPTION == 2
     //MOUSE_GOAL_2();
-    Serial.println(MOUSE_GOAL_2()); //"0" BEACON NOT DETECTED, "1" APPROACHING DETECTED BEACON
+    // Serial.println(MOUSE_GOAL_2()); //"0" BEACON NOT DETECTED, "1" APPROACHING DETECTED BEACON
                                     //"2" BEACON EXTINGUISHED
     #endif
   }

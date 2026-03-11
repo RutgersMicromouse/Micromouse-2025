@@ -7,7 +7,7 @@ void tofSetup() {
     frontToF.setTimeout(500);
     if (!frontToF.init())
     {
-    Serial.println("Failed to detect and initialize time-of-flight sensor!");
+    // Serial.println("Failed to detect and initialize time-of-flight sensor!");
     while (1);
     }
 
