@@ -50,8 +50,7 @@ void initialize() {
     if(isLoad()) {
         loadMazeFromEEPROM(maze);
         loadWallsFromEEPROM(walls);
-        // Serial.println("loaded");
-		while(1);
+        		while(1);
 		mazePrintout();
         digitalWrite(LED_BUILTIN, LOW);
         delay(200);
@@ -561,24 +560,14 @@ void mazePrintout() {
 
 			if(currentCfg.x == i && currentCfg.y == j) {
 				
-				// Serial.print("[");
-				// Serial.print(static_cast<int>(maze[i][j]));
-				// Serial.print("], ");
-			} else {
+															} else {
 				if(maze[i][j] < 10) {
-					// Serial.print(" ");
-					// Serial.print(static_cast<int>(maze[i][j]));
-					// Serial.print(", ");	
-				} else {
-					// Serial.print(static_cast<int>(maze[i][j]));
-					// Serial.print(", ");	
-				}
+																			} else {
+														}
 			}
 		}
-		// Serial.println();
+			}
 	}
-	// Serial.println();
-}
 #endif
 
 
@@ -671,8 +660,7 @@ void runMaze(char goal) {
 		if (isSaving()) {
 			saveMazeToEEPROM(maze);
 			saveWallsToEEPROM(walls);
-			// Serial.println("saved");
-			digitalWrite(LED_BUILTIN, LOW);
+						digitalWrite(LED_BUILTIN, LOW);
 			delay(200);
 			digitalWrite(LED_BUILTIN, HIGH);
 			delay(200);
@@ -811,11 +799,8 @@ void speedrun() {
 	
 	for(int j = 32; j >= 0; j--) {
 		for(int i = 0; i < 33; i++) {
-			// Serial.print(highResMaze[i][j]);
-			// Serial.print(" ");
-		}
-		// Serial.println();
-	}
+								}
+			}
 	
 
 
