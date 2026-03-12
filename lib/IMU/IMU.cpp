@@ -13,7 +13,7 @@ void setupIMU() {
 
   //bno.begin();
 
- // Serial.println("IMU found!");
+  Serial.println("IMU found!");
   
 }
 

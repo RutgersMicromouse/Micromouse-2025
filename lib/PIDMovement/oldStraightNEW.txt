@@ -9,28 +9,22 @@ int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
 
-double baseTime = 0.100e6; //50 pwm --> 0.605
+double baseTime = .375e6; //50 pwm --> 0.605
 double blockLength = 160;
 
 //Center --> 4cm
 //Max distance from other sensor while hitting opposite wall --> 8 cm
 void straight(char direction, int distance)
 {
-    double baseSpeed = 150; //50 PWM --> 0.605 seconds
-    double Km = 0.5;
-    double Td = 0.75;
+    double baseSpeed = 100; //50 PWM --> 0.605 seconds
+    double Km = 1;//0.5;
+    double Td = 0.30;//0.75;
 
     double runTime = baseTime;
-
-    // deceleration rate (PWM per second)
-    double decelRate = 100;
-    // time to go from baseSpeed -> 0
-    double decelTime = baseSpeed / decelRate;
-    double decelTime_us = decelTime * 1e6;
-
-    // shorten constant phase so distance stays identical
-    double constantTime = runTime - decelTime_us/2;
-
+    double constantRatio = 0;
+    double decelTime = 2 * runTime * (1 - constantRatio);
+    double decelRate = -(baseSpeed/decelTime);
+    
     double startTime = micros();
     double currentTime = micros();
     double oldTime = micros();
@@ -41,11 +35,18 @@ void straight(char direction, int distance)
     double oldError = currentError;
 
     int Wall_threshold = 9;
-    int counter = 0;
 
-    Serial.printf("constantTime + decelTime_us: %lf\n", constantTime+decelTime_us);
+    double speed = baseSpeed;
 
-    while((timeElapsed < constantTime + decelTime_us))
+    Serial.printf("Decel Time: %lf\n", decelTime);
+
+    Serial.printf("Decel Rate: %lf\n", decelRate);
+
+    Serial.printf("Total Time: %lf\n", (constantRatio*runTime)+decelTime);
+
+    Serial.printf("Time Starts to Decelerate: %lf\n", (constantRatio*runTime));
+
+    while((timeElapsed < (constantRatio * runTime) + decelTime))
     {
 
         if(checkFrontWall() < 80) {
@@ -57,14 +58,10 @@ void straight(char direction, int distance)
         currentTime = micros();
         timeElapsed = currentTime - startTime;
 
-        double speed = baseSpeed;
-
         // DECELERATION PHASE
-        if(timeElapsed > abs(constantTime))
+        if(timeElapsed > constantRatio * runTime)
         {
-            double t = (timeElapsed - constantTime)/1e6;
-
-            speed = baseSpeed - decelRate * t;
+            speed = speed + (decelRate*(currentTime - oldTime));
 
             if(speed < 0)
                 speed = 0;
@@ -87,7 +84,15 @@ void straight(char direction, int distance)
 
         oldError = currentError;
         oldTime = currentTime;
+
+        Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
+
+
     }
+
+    moveLeftMotor(0);
+    moveRightMotor(0);
+    delay(100);
 
 }
 

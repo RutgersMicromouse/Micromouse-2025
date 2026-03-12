@@ -7,14 +7,13 @@ void turnTo(char direction)
     double error = 0;
     double totalError = 0;
 
-    double kp = 1.27;
-    double ki = 0.0;
+    double kp = 0.6;
 
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
 
-    double totalTime = micros();
-    double previousTime = micros();
+    // double totalTime = micros();
+    // double previousTime = micros();
     
     // New variables for position stability check
     unsigned long stablePositionStartTime = 0;
@@ -54,7 +53,6 @@ void turnTo(char direction)
     while (1)
     {
         currentAngle = getAngle();
-        totalTime = micros();
         error = targetDirection - currentAngle;
 
         while (error > 180)
@@ -66,14 +64,8 @@ void turnTo(char direction)
             error += 360;
         }
 
-        totalError += error / (totalTime - previousTime);
-        leftMotorSpeed = ki * totalError + kp * error;
-        rightMotorSpeed = -ki * totalError + kp * -error;
-        previousTime = totalTime;
-
-        Serial.printf("Left Motor Speed: %lf\t Right Motor Speed: %lf\t Error: %lf\n", leftMotorSpeed, rightMotorSpeed, error);
-        leftMotorSpeed *= 1.0;
-        rightMotorSpeed *= 1.1;
+        leftMotorSpeed = kp * error;
+        rightMotorSpeed = kp * -error;
 
         // Check for stall condition
         if (fabs(leftMotorSpeed - prevLeftSpeed) < stallThreshold && 
@@ -115,6 +107,6 @@ void turnTo(char direction)
 
     moveLeftMotor(0);
     moveRightMotor(0);
-    delay(100);
+    delay(1);
     
 }
