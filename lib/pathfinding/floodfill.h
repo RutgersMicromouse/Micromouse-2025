@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+#include<queue>
+#include "API.h"
 
 typedef struct
 {

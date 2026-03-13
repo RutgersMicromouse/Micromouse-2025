@@ -47,7 +47,6 @@ boolean checkRightWall() {
     return false;
 }
 
-//Change front disatnce to <110 for checking front wall
 int16_t checkFrontWall() {
     return sensor.read();
 }

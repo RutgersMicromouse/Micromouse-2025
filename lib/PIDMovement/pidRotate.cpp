@@ -7,7 +7,7 @@ void turnTo(char direction)
     double error = 0;
     double totalError = 0;
 
-    double kp = 0.6;
+    double kp = 0.65;
 
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;
@@ -20,7 +20,7 @@ void turnTo(char direction)
     bool isStable = false;
     double lastError = 0;
     const double errorThreshold = 1.0;                // Consider position stable if error is less than this
-    const unsigned long stableTimeThreshold = 500000; // 0.5 seconds in microseconds
+    const unsigned long stableTimeThreshold = 200000; // 0.5 seconds in microseconds
 
     // Variables for stall detection
     unsigned long stallStartTime = 0;
@@ -28,23 +28,41 @@ void turnTo(char direction)
     double prevLeftSpeed = 0;
     double prevRightSpeed = 0;
     const double stallThreshold = 3.0;               // Motor speed difference threshold
-    const unsigned long stallTimeThreshold = 500000; // 0.5 seconds in microseconds
+    const unsigned long stallTimeThreshold = 200000; // 0.5 seconds in microseconds
 
     // Based on direction we want to go to, we set the target angle
     switch (direction)
     {
+        //NE --> A,
+    //SE --> B,
+    //SW --> C
+    //NW --> D
+
     case 'N':
         targetDirection = 0;
+        break;
+    case 'A':
+        targetDirection = 45;
+        break;
+     case 'E':
+        targetDirection = 90;
+        break;
+    case 'B':
+        targetDirection = 135;
         break;
     case 'S':
         targetDirection = 180;
         break;
-    case 'E':
-        targetDirection = 90;
+    case 'C':
+        targetDirection = 225;
         break;
     case 'W':
         targetDirection = 270;
         break;
+    case 'D':
+        targetDirection = 315;
+        break;
+
     }
 
     double startTime = micros();
@@ -107,6 +125,6 @@ void turnTo(char direction)
 
     moveLeftMotor(0);
     moveRightMotor(0);
-    delay(1);
+    delay(10);
     
 }

@@ -1,6 +1,6 @@
 #pragma once
-#include "./floodfill.h"
-#include "./API.h"
+#include "floodfill.h"
+#include "API.h"
 
 extern cell maze[33][33];
 extern mouse_t mouse;
