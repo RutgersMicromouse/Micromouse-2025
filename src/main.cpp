@@ -47,16 +47,28 @@ void setup() {
   }
 
   setupDistanceSensors();
+
+  //HALF BLOCK
   straight('N', 80);
   delay(500);
  
-  initialize_maze(5, 5, true);
+  initialize_maze(16, 16, true); //Set to 16 16 for the maze center, 31 and 31
   floodfill();
   initialize_maze(1, 1, false);
   floodfill();
+  delay(250);
+
+  turnTo('N');
+  delay(100);
+  moveRightMotor(-50);
+  moveLeftMotor(-50);
+  delay(1000);
+  stopMotors();
   delay(1000);
 
-  Astar(5, 5);
+  straight('N', 80);
+  Serial.println("Running A Star");
+  //Astar(5, 5); //16 by 16 for the center
   
 }
 

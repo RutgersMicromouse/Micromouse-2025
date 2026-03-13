@@ -10,7 +10,7 @@ int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
 
-double baseTime = .370e6; //50 pwm --> 0.605
+double baseTime = .370e6; //50 pwm --> 0.605 
 double blockLength = 160;
 
 //Center --> 4cm
@@ -24,7 +24,7 @@ void straight(char direction, int distance)
     double Ka = 0.25;
 
     double runTime = baseTime;
-
+//This if statement is for 1/2 block
     if(distance == 80) {
         runTime = runTime * 0.4;
     }
