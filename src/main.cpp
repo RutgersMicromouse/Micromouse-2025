@@ -38,7 +38,8 @@ void setup() {
   }
   
   // move to middle of starting cell from back wall
-  //pidForward(50);
+  //pidForward(1800);
+  //delay(5000);
 
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now
@@ -60,7 +61,7 @@ void setup() {
   }
 
   // // Default
-     initialize();
+   initialize();
    runMaze('c');
    
    /*

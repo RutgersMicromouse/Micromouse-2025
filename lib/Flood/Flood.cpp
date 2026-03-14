@@ -413,18 +413,18 @@ void move(char direction) {
     
     // if facing and direction are the same, go straight
     if(facing == direction) {
-        API::moveForward();
+        API::moveForward(1);
     } else {
         if(facing == 'N') {
             switch(direction) {
 		    case 'S': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'W': // turnLeft
-			    API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::moveForward(1);
 			    break;
-		    case 'E': // turnRight
-			    API::turnRight(); API::moveForward();
+		    case 'E': // turnRight		
+			    API::turnRight(); API::moveForward(1);
 			    break;
 			default:
 				Serial.printf("invalid direction %c\n", direction);
@@ -434,13 +434,13 @@ void move(char direction) {
         if(facing == 'S') {
             switch(direction) {
 		    case 'N': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'E': // turnLeft
-			    API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'W': // turnRight
-			    API::turnRight(); API::moveForward();
+			    API::turnRight(); API::moveForward(1);
 			    break;
 			default:
 				Serial.printf("invalid direction %c\n", direction);
@@ -450,13 +450,13 @@ void move(char direction) {
         if(facing == 'E') {
             switch(direction) {
 		    case 'W': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'N': // turnLeft
-			    API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'S': // turnRight
-			    API::turnRight(); API::moveForward();
+			    API::turnRight(); API::moveForward(1);
 			    break;
 			default:
 				Serial.printf("invalid direction %c\n", direction);
@@ -466,13 +466,13 @@ void move(char direction) {
         if(facing == 'W') {
             switch(direction) {
 		    case 'E': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'S': // turnLeft
-			    API::turnLeft(); API::moveForward();
+			    API::turnLeft(); API::moveForward(1);
 			    break;
 		    case 'N': // turnRight
-			    API::turnRight(); API::moveForward();
+			    API::turnRight(); API::moveForward(1);
 			    break;
 			default:
 				Serial.printf("invalid direction %c\n", direction);
@@ -660,7 +660,7 @@ void runMaze(char goal) {
 		if (isSaving()) {
 			saveMazeToEEPROM(maze);
 			saveWallsToEEPROM(walls);
-						digitalWrite(LED_BUILTIN, LOW);
+			digitalWrite(LED_BUILTIN, LOW);
 			delay(200);
 			digitalWrite(LED_BUILTIN, HIGH);
 			delay(200);

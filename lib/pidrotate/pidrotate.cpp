@@ -1,9 +1,9 @@
 #include "pidrotate.h"
 
-double Kp = 2.7;
+double Kp = 1.4;
 double Ki = 0;
 double Kd = 0;
-
+double mult = 1;
 
 
 void turnTo(double goal_angle) {
@@ -30,7 +30,7 @@ void turnTo(double goal_angle) {
     while (true) {
         // Guard Clauses:
         // 1. At the destination angle
-        if (abs(error) <= 1.0) { setRightPWM(0); setLeftPWM(0); return; }
+        if (abs(error) <= 1.0) { setRightPWM(0); setLeftPWM(0); delay(500); return; }
         
         // 2. Stall Condition, 0.1 second
         if (micros() > sampleTime + 1e5){
@@ -46,16 +46,17 @@ void turnTo(double goal_angle) {
         // if (angl == 0 && micros() > sampleTime + 1e6) { setRightPWM(0); setLeftPWM(0); return; } // IMU error
         //End Guard Clauses
 
-                error = goal_angle - angle();
+        error = goal_angle - angle();
         if (error < -180.0) {error += 360;} else if (error > 180) {error -= 360;}
         error_int = error * (micros() - t_old);
         error_deriv = (error - error_old)/(micros() - t_old);
 
-        angleOut = Kp * error + Ki * error_int + Kd * error_deriv;
+        angleOut = (Kp * error + Ki * error_int + Kd * error_deriv)* mult;
         setLeftPWM(angleOut); setRightPWM(-angleOut); 
 
         // update error_angle_old, and t_old
         error_old = error; t_old = micros();
 
-            }
+    }
+
 }
