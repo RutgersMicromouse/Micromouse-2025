@@ -571,6 +571,7 @@ void mazePrintout() {
 
 
 void runMaze(char goal) {
+	pidForward(100); // Example distance, replace with actual value
 	mazePrintout();
 
 	int loopCondition = 1;
