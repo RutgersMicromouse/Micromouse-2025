@@ -12,9 +12,38 @@ double Kd_angle = 0.01;
 
 double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 
+#define goalspeed 150000
+struct encodercontext {
+    int32_t left_position;
+    int32_t right_position;
+    uint32_t last_update_time;
+};
+
+void get_encoderspeed(encodercontext* old, encodercontext* newcontext, double* left_speed, double* right_speed) {
+    *left_speed = (newcontext->left_position - old->left_position) / ((newcontext->last_update_time - old->last_update_time) / 1e6);
+    *right_speed = (newcontext->right_position - old->right_position) / ((newcontext->last_update_time - old->last_update_time) / 1e6);
+    memcpy(old, newcontext, sizeof(encodercontext));
+}
 // Distance forward in mm
 void pidForward(double distance) {
+    encodercontext old_encoder;
+    encodercontext new_encoder;
+    old_encoder.left_position = encLeft.read();
+    old_encoder.right_position = -encRight.read();
+    old_encoder.last_update_time = micros();
+    double left_speed, right_speed;
+    while(1){
+        //getting encoder speeds
+        new_encoder.left_position = encLeft.read();
+        new_encoder.right_position = -encRight.read();
+        new_encoder.last_update_time = micros();
+        get_encoderspeed(&old_encoder, &new_encoder, &left_speed, &right_speed);
 
+        double error_speed = goalspeed - left_speed;
+        Serial.printf("left speed = %f\n\r", error_speed);
+        constrain(error_speed, -200, 200);
+        setLeftPWM(Kp_dist * error_speed);
+    }
 }
 
 
