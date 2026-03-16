@@ -6,7 +6,7 @@ double Ki_dist = 0;
 double Kd_dist = 0;
 
 // PID for angle offset
-double Kp_angle = 0.1;
+double Kp_angle = 100.0;
 double Ki_angle = -0.2;
 double Kd_angle = 0.01;
 
@@ -76,7 +76,7 @@ void pidForward(double distance) {
         setLeftPWM((int)-pwm_left);
         setRightPWM((int)-pwm_right);
 
-        Serial.printf("AngVel=%0.2f AngCorr=%0.2f Lspd=%0.2f Rspd=%0.2f Lpwm=%0.2f Rpwm=%0.2f\n\r", angular_velocity, angleCorr, left_speed, right_speed, pwm_left, pwm_right);
+        Serial.printf("AngVel=%lf\tAngCorr=%lf\tLspd=%lf\tRspd=%lf\tLpwm=%d\tRpwm=%d\n\r", angular_velocity, angleCorr, left_speed, right_speed, (int)pwm_left, (int)pwm_right);
 
         delay(5);
     }
