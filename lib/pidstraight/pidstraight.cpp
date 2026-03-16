@@ -2,14 +2,14 @@
 #include <pidrotate.h>
 
 // PID for distance
-double Kp_dist = 0.2;
+double Kp_dist = 0; //0.15
 double Ki_dist = 0;
-double Kd_dist = 0.01;
+double Kd_dist = 0; //0.01
 
 // PID for angle offset
-double Kp_angle = 2;
+double Kp_angle = 1; //1.8
 double Ki_angle = 0;
-double Kd_angle = 0;
+double Kd_angle = 0.01;
 
 double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 
@@ -182,6 +182,7 @@ void pidForward(double distance) {
 
 
 void pidForward(double distance) {
+    int basespeed = 125;
     Serial.printf("Hello pidForward! Distance: %f\n", distance);
     double goal_distance = (TICKS_PER_ROTATION * distance / (WHEEL_DIAM * PI)); // Converts mm -> encoder ticks
         
@@ -282,7 +283,7 @@ void pidForward(double distance) {
         if (front() < 70) {
             setRightPWM(0);
             setLeftPWM(0);
-            delay(1000);
+            delay(500);
             return;
         }
 
@@ -310,8 +311,8 @@ void pidForward(double distance) {
         distOutRight = Kp_dist * error_dist_right + Ki_dist * error_int_dist_right + Kd_dist * error_deriv_dist_right;
         angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
 
-        double rightPWM = (distOutRight - angleOut) * 1.25;
-        double leftPWM = (distOutLeft + angleOut) * 1.25;
+        double rightPWM = basespeed + (distOutRight - angleOut) * 1.25;
+        double leftPWM = basespeed + (distOutLeft + angleOut) * 1.25;
 
 
         // --- 4. Smooth acceleration ramp ---
@@ -325,25 +326,37 @@ void pidForward(double distance) {
         // leftPWM *= rampFactor;
 
         // Limit PWM range
-        if (error_dist_left> 0.6*goal_distance && error_dist_right > 0.6*goal_distance) { // If we're far, allow higher speeds
-            rightPWM = constrain(rightPWM, 120, 400);
-            leftPWM = constrain(leftPWM, 120, 400);
-        } else if (abs(error_dist_left)  < 20 && abs(error_dist_right) < 20) { // If we're close, be more gentle
-            if (error_dist_left > 0 && error_dist_right > 0) { // If we're close but still have a lot of distance left, allow more power
-                rightPWM = constrain(rightPWM, 70, 400);
-                leftPWM = constrain(leftPWM, 70, 400);
-            } else { // If we're close and within range, be gentle
-                rightPWM = constrain(rightPWM, -400, -70);
-                leftPWM = constrain(leftPWM, -400, -70);
-            }
-            rightPWM = constrain(rightPWM, -400, 400);
-            leftPWM = constrain(leftPWM, -400, 400);
-        } else {
-            rightPWM = constrain(rightPWM, -400, 400);
-            leftPWM = constrain(leftPWM, -400, 400);
-        }
+        // if (error_dist_left> 0.6*goal_distance && error_dist_right > 0.6*goal_distance) { // If we're far, allow higher speeds
+        //     rightPWM = constrain(rightPWM, 120, 400);
+        //     leftPWM = constrain(leftPWM, 120, 400);
+        // } else if (abs(error_dist_left)  < 5 && abs(error_dist_right) < 5) { // If we're close, be more gentle
+        //     if (error_dist_left > 0 && error_dist_right > 0) { // If we're close but still have a lot of distance left, allow more power
+        //         rightPWM = constrain(rightPWM, 70, 400);
+        //         leftPWM = constrain(leftPWM, 70, 400);
+        //     } else { // If we're close and within range, be gentle
+        //         rightPWM = constrain(rightPWM, -400, -70);
+        //         leftPWM = constrain(leftPWM, -400, -70);
+        //     }
+        //     rightPWM = constrain(rightPWM, -400, 400);
+        //     leftPWM = constrain(leftPWM, -400, 400);
+        // } else {
+        //     rightPWM = constrain(rightPWM, -400, 400);
+        //     leftPWM = constrain(leftPWM, -400, 400);
+        // }
 
         // Apply PWM
+        if (rightPWM < 30 && (rightPWM >= 0 && error_dist_right > 0)) {
+            rightPWM = 50;
+        }
+        if (leftPWM < 30 && (leftPWM >= 0 && error_dist_left > 0)){
+            leftPWM = 50;
+        }
+        if (rightPWM > -30 && (rightPWM <= 0 && error_dist_right < 0)){
+            rightPWM = -50;
+        }
+        if (leftPWM > -30 && (leftPWM <= 0 && error_dist_left < 0)) {
+            leftPWM = -50;
+        }
         setRightPWM(rightPWM);
         setLeftPWM(leftPWM);
 

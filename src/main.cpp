@@ -10,6 +10,9 @@
 #include "labyrinth.h"
 #include "firefighter.h"
 
+bool armed = false;
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -21,13 +24,10 @@ void setup() {
   delay(2000); // Delay to open serial monitor
   digitalWrite(LED_BUILTIN, HIGH); // turns the builtin LED off (active low)
 
-
-  imuSetup();
   tofSetup();
+  imuSetup();
   delay(50);
   motorSetup();
-
-
 
     
   for (byte address = 1; address < 127; address++) {
@@ -36,10 +36,22 @@ void setup() {
     if (error == 0) {
                 }
   }
+
+  while(!armed) {
+    
+    int16_t frontDistance = front();
+    if(frontDistance < 100 && frontDistance > 0) {
+      armed = true;
+    }
+    printf("Waiting for arming... Front distance: %d\n", frontDistance);
+    delay(50);
+  }
+  printf("Armed! Starting...\n");
+  delay(500);
   
   // move to middle of starting cell from back wall
-  //pidForward(1800);
-  //delay(5000);
+  pidForward(2400);
+  delay(5000);
 
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now

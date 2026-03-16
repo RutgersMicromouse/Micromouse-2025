@@ -5,9 +5,11 @@ Adafruit_BNO055 bno;
 void imuSetup() {
   bno = Adafruit_BNO055(55, 0x28);
   if (!bno.begin()) { 
+    Serial.println("No BNO055 detected");
         while(1);
   }
-  bno.setExtCrystalUse(true);
+    Serial.println("BNO055 detected");
+  bno.setExtCrystalUse(true); 
 }
 
 double angle() {

@@ -2,7 +2,7 @@
 
 #define PI 3.1415926535897932384626433832795
 #define WHEEL_DIAM 12 // wheel diameter in mm
-#define TICKS_PER_ROTATION 83 // 840 encoder ticks per 1 wheel rotation
+#define TICKS_PER_ROTATION 100 // 840 encoder ticks per 1 wheel rotation
 
 
 

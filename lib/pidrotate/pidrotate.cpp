@@ -1,8 +1,8 @@
 #include "pidrotate.h"
 
-double Kp = 1.4;
+double Kp = 1.35;
 double Ki = 0;
-double Kd = 0;
+double Kd = 0.01;
 double mult = 1;
 
 
@@ -30,7 +30,7 @@ void turnTo(double goal_angle) {
     while (true) {
         // Guard Clauses:
         // 1. At the destination angle
-        if (abs(error) <= 1.0) { setRightPWM(0); setLeftPWM(0); delay(500); return; }
+        if (abs(error) <= 0.5) { setRightPWM(0); setLeftPWM(0); delay(500); return; }
         
         // 2. Stall Condition, 0.1 second
         if (micros() > sampleTime + 1e5){
