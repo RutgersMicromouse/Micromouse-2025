@@ -1,12 +1,12 @@
 #include "pidstraight.h"
 
 // PID for distance
-double Kp_dist = 0.5;
+double Kp_dist = 2.5;
 double Ki_dist = 0;
 double Kd_dist = 0;
 
 // PID for angle offset
-double Kp_angle = 100.0;
+double Kp_angle = 0.0;
 double Ki_angle = -0.2;
 double Kd_angle = 0.01;
 
@@ -26,8 +26,8 @@ void get_encoderspeed(encodercontext* old, encodercontext* newcontext, double* l
     uint32_t dt_us = newcontext->last_update_time - old->last_update_time;
     double dt = (double)dt_us / 1e6; // seconds
     if (dt < 1e-6) dt = 1e-6;
-    *left_speed = (double)dleft / dt;   // ticks per second
-    *right_speed = (double)dright / dt; // ticks per second
+    *left_speed = 0.25 * ((double)dleft / dt);   // ticks per second
+    *right_speed = 0.25 * ((double)dright / dt); // ticks per second
     memcpy(old, newcontext, sizeof(encodercontext));
 }
 
@@ -50,24 +50,34 @@ void pidForward(double distance) {
     old_encoder.right_position = -encRight.read();
     old_encoder.last_update_time = micros();
     old_encoder.angle_position = angle();
-    double left_speed, right_speed, angular_velocity;
+    double left_speed, right_speed;
     while(1){
+        if(front() < 90) {
+            setRightPWM(0);
+            setLeftPWM(0);
+            return;
+        }
         //getting encoder speeds
         new_encoder.left_position = encLeft.read();
         new_encoder.right_position = -encRight.read();
         new_encoder.last_update_time = micros();
         new_encoder.angle_position = angle();
-        get_angular_velocity(&old_encoder, &new_encoder, &angular_velocity);
         get_encoderspeed(&old_encoder, &new_encoder, &left_speed, &right_speed);
-        double angleCorr = Kp_angle * angular_velocity;
+        // Compute angle error relative to goal 0 degrees and correct for wrap
+        double current_angle = (double)new_encoder.angle_position;
+        double error_angle = 0.0 - current_angle;
+        if (error_angle > 180.0) error_angle -= 360.0;
+        if (error_angle < -180.0) error_angle += 360.0;
+
+        // Angle correction (proportional). Tune Kp_angle as needed.
+        double angleCorr = Kp_angle * error_angle;
+
         double error_left = (double)goalspeed - left_speed;
         double error_right = (double)goalspeed - right_speed;
-        error_left -= Kp_angle * angular_velocity;
-        error_right += Kp_angle * angular_velocity;
 
         // Apply angular correction opposite directions on each wheel
-        double pwm_left = (Kp_dist * error_left);
-        double pwm_right = (Kp_dist * error_right);
+        double pwm_left = (Kp_dist * error_left) + angleCorr;
+        double pwm_right = (Kp_dist * error_right) - angleCorr;
 
         // Allow full PWM range; tune limits as needed
         pwm_left = constrain(pwm_left, -150.0, 150.0);
@@ -76,7 +86,7 @@ void pidForward(double distance) {
         setLeftPWM((int)-pwm_left);
         setRightPWM((int)-pwm_right);
 
-        Serial.printf("AngVel=%lf\tAngCorr=%lf\tLspd=%lf\tRspd=%lf\tLpwm=%d\tRpwm=%d\n\r", angular_velocity, angleCorr, left_speed, right_speed, (int)pwm_left, (int)pwm_right);
+        Serial.printf("curr_angle=%lf,AngCorr=%lf\tLspd=%lf\tRspd=%lf\tLpwm=%d\tRpwm=%d\n\r", error_angle, angleCorr, left_speed, right_speed, (int)pwm_left, (int)pwm_right);
 
         delay(5);
     }
