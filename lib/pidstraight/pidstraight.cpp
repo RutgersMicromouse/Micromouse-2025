@@ -7,9 +7,9 @@ double Ki_dist = 0;
 double Kd_dist = 0; //0.01
 
 // PID for angle offset
-double Kp_angle = 1; //1.8
-double Ki_angle = 0;
-double Kd_angle = 0.01;
+double Kp_angle = 0.85; //1.8 //1
+double Ki_angle = 0.18;  //0.02
+double Kd_angle = 0.09; //0.3
 
 double identity_diag[8] = {0.0,45,90,135,180,225,270,315};
 
@@ -182,10 +182,13 @@ void pidForward(double distance) {
 
 
 void pidForward(double distance) {
-    int basespeed = 125;
+    int basespeed = 100;
     Serial.printf("Hello pidForward! Distance: %f\n", distance);
-    double goal_distance = (TICKS_PER_ROTATION * distance / (WHEEL_DIAM * PI)); // Converts mm -> encoder ticks
-        
+    double encoder_per_mm = TICKS_PER_ROTATION / (WHEEL_DIAM * PI); //converts mm to encoder ticks
+    double goal_distance = encoder_per_mm * distance; // target distance in encoder ticks
+    double goal_difference = 8*encoder_per_mm;
+    goal_distance = goal_distance + goal_difference; // empirical adjustment to hit the target more accurately (tune this!)
+    
     // Reset encoders
     encLeft.write(0);
     encRight.write(0);
@@ -204,6 +207,10 @@ void pidForward(double distance) {
         }
     }
     goal_angle = identity_diag[closest_index];
+
+    if (abs(goal_angle - angle()) > 2) {
+        turnTo(goal_angle);
+    }
 
     // Initialize PID variables
     double t_old = micros();
@@ -232,8 +239,8 @@ void pidForward(double distance) {
 
     // --- Stall detection setup (Fixed Polarity) ---
     double sampleTime = micros();
-    double sampleRight = -encRight.read(); // Inverted polarity
-    double sampleLeft = -encLeft.read();   // Inverted polarity
+    double sampleRight = encRight.read(); // Inverted polarity (not?)
+    double sampleLeft = encLeft.read();   // Inverted polarity (not?)
 
     // Acceleration variables
     double startFactor = 0.5;     // Start at 20% of output
@@ -242,12 +249,12 @@ void pidForward(double distance) {
 
     while (true) {
 
-        // if (avgEncoder >= goal_distance) {
-        //     setRightPWM(0);
-        //     setLeftPWM(0);
-        //     delay(500);
-        //     return;
-        // }
+        if (avgEncoder >= goal_distance) {
+            setRightPWM(0);
+            setLeftPWM(0);
+            delay(500);
+            return;
+        }
 
         // --- 1. READ AND INVERT ENCODERS ---
         // Multiply by -1 to fix the backward counting!

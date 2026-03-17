@@ -5,6 +5,7 @@
 #include "motors.h"
 #include "pidstraight.h"
 #include "pidrotate.h"
+#include "initializeHand.h"
 
 #include "Flood.h"
 #include "labyrinth.h"
@@ -24,10 +25,7 @@ void setup() {
   delay(2000); // Delay to open serial monitor
   digitalWrite(LED_BUILTIN, HIGH); // turns the builtin LED off (active low)
 
-  tofSetup();
-  imuSetup();
-  delay(50);
-  motorSetup();
+
 
     
   for (byte address = 1; address < 127; address++) {
@@ -37,21 +35,17 @@ void setup() {
                 }
   }
 
-  while(!armed) {
-    
-    int16_t frontDistance = front();
-    if(frontDistance < 100 && frontDistance > 0) {
-      armed = true;
-    }
-    printf("Waiting for arming... Front distance: %d\n", frontDistance);
-    delay(50);
-  }
-  printf("Armed! Starting...\n");
-  delay(500);
-  
+  tofSetup();
+  imuSetup();
+  delay(50);
+  motorSetup();
+
   // move to middle of starting cell from back wall
-  pidForward(2400);
-  delay(5000);
+
+  // for (int i = 0; i < 5; i++) {
+  //   API::turnHalf();
+  //   delay(200);
+  // }
 
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now
@@ -71,6 +65,12 @@ void setup() {
         labyrinthLoop();
     return;    
   }
+
+   startUpcheck(); // waits for hand in front to start up
+   imuSetup(); // re-calibrate IMU after startup check
+
+  //  pidForward(180);
+  //  delay(5000);
 
   // // Default
    initialize();

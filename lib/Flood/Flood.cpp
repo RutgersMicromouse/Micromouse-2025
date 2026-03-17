@@ -418,7 +418,7 @@ void move(char direction) {
         if(facing == 'N') {
             switch(direction) {
 		    case 'S': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
+			    API::turnHalf(); API::moveForward(1);
 			    break;
 		    case 'W': // turnLeft
 			    API::turnLeft(); API::moveForward(1);
@@ -434,7 +434,7 @@ void move(char direction) {
         if(facing == 'S') {
             switch(direction) {
 		    case 'N': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
+			    API::turnHalf(); API::moveForward(1);
 			    break;
 		    case 'E': // turnLeft
 			    API::turnLeft(); API::moveForward(1);
@@ -450,7 +450,7 @@ void move(char direction) {
         if(facing == 'E') {
             switch(direction) {
 		    case 'W': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
+			    API::turnHalf(); API::moveForward(1);
 			    break;
 		    case 'N': // turnLeft
 			    API::turnLeft(); API::moveForward(1);
@@ -466,7 +466,7 @@ void move(char direction) {
         if(facing == 'W') {
             switch(direction) {
 		    case 'E': // turn around
-			    API::turnLeft(); API::turnLeft(); API::moveForward(1);
+			    API::turnHalf(); API::moveForward(1);
 			    break;
 		    case 'S': // turnLeft
 			    API::turnLeft(); API::moveForward(1);
@@ -705,7 +705,7 @@ void backTrack() {
 	// face the mouse north again
 	switch(currentCfg.dir) {
 		case 'S': 
-			API::turnLeft(); API::turnLeft();
+			API::turnHalf();
 			break;
 		case 'E': 
 			API::turnLeft();

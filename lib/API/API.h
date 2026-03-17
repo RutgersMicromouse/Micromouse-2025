@@ -25,6 +25,7 @@ public:
 
     static void turnRight();
     static void turnLeft();
+    static void turnHalf();
     static void moveForward(int distance = 1);
     static void moveForwardHalf(double numHalfSteps = 1);
 
