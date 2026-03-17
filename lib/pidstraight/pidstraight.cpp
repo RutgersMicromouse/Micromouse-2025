@@ -182,7 +182,7 @@ void pidForward(double distance) {
 
 
 void pidForward(double distance) {
-    int basespeed = 100;
+    int basespeed = 800;
     Serial.printf("Hello pidForward! Distance: %f\n", distance);
     double encoder_per_mm = TICKS_PER_ROTATION / (WHEEL_DIAM * PI); //converts mm to encoder ticks
     double goal_distance = encoder_per_mm * distance; // target distance in encoder ticks
@@ -243,9 +243,9 @@ void pidForward(double distance) {
     double sampleLeft = encLeft.read();   // Inverted polarity (not?)
 
     // Acceleration variables
-    double startFactor = 0.5;     // Start at 20% of output
-    double accelRate = 2.0;       // Controls how fast it ramps
-    double rampProgress = 0.0;    
+    double startFactor = 0.15;     // Start at 20% of output
+    double accelRate = 0.8;       // Controls how fast it ramps
+    double rampProgress = 0.5   ;    
 
     while (true) {
 
@@ -322,15 +322,15 @@ void pidForward(double distance) {
         double leftPWM = basespeed + (distOutLeft + angleOut) * 1.25;
 
 
-        // --- 4. Smooth acceleration ramp ---
-        // rampProgress = constrain(avgEncoder / goal_distance, 0.0, 1.0);
+        //--- 4. Smooth acceleration ramp ---
+        rampProgress = constrain(avgEncoder / goal_distance, 0.0, 1.0);
 
-        // // Exponential ease-in ramp curve
-        // double rampFactor = startFactor + (1.0 - startFactor) * (1.0 - exp(-accelRate * rampProgress));
+        // Exponential ease-in ramp curve
+        double rampFactor = startFactor + (1.0 - startFactor) * (1.0 - exp(-accelRate * rampProgress));
 
-        // // Apply ramp factor to PWM outputs
-        // rightPWM *= rampFactor;
-        // leftPWM *= rampFactor;
+        // Apply ramp factor to PWM outputs
+        rightPWM *= rampFactor;
+        leftPWM *= rampFactor;
 
         // Limit PWM range
         // if (error_dist_left> 0.6*goal_distance && error_dist_right > 0.6*goal_distance) { // If we're far, allow higher speeds
