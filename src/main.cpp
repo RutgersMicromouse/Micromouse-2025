@@ -6,10 +6,14 @@
 #include "pidstraight.h"
 #include "pidrotate.h"
 #include "initializeHand.h"
+#include "sidedist.h"
 
 #include "Flood.h"
 #include "labyrinth.h"
 #include "firefighter.h"
+
+const int SENSOR_RIGHT_PIN = D9; 
+const int SENSOR_LEFT_PIN = D10;
 
 bool armed = false;
 
@@ -39,6 +43,7 @@ void setup() {
   imuSetup();
   delay(50);
   motorSetup();
+  sideDistSetup();
 
   // move to middle of starting cell from back wall
 
@@ -69,8 +74,9 @@ void setup() {
    startUpcheck(); // waits for hand in front to start up
    imuSetup(); // re-calibrate IMU after startup check
 
-   pidForward(180);
-   delay(5000);
+  //  pidForward(180*16);
+  // pidForward(180*3);
+  // delay(5000);
 
   // // Default
    initialize();
@@ -127,9 +133,12 @@ void setup() {
 }
 
 void loop() {
-  delay(2000);
-          
-  
-  
+  double leftDist = getLeftSideDist();
+  double rightDist = getRightSideDist();
 
+  // 5. Print the results
+  Serial.printf("Left (mm): %.2f \t Right (mm): %.2f\n", leftDist, rightDist);
+  
+  // A 50ms delay is much better for responsive robotics than 1000ms!
+  delay(50);
 }

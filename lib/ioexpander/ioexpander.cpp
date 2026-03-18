@@ -1,4 +1,5 @@
 #include "ioexpander.h"
+#include <sidedist.h>
 
 bool isSaving() {
     return bitRead(ioExpanderRead(), 1);
@@ -21,10 +22,16 @@ bool isFirefighter(){
 }
 
 bool rightWall(){
-    return bitRead(ioExpanderRead(), 6);
+    if (getRightSideDist() > 130) {
+        return false;
+    }
+    return true;
 }
 bool leftWall(){
-    return bitRead(ioExpanderRead(), 7);
+    if (getLeftSideDist() > 130) {
+        return false;
+    }
+    return true;
 }
 
 
