@@ -13,9 +13,9 @@ double Ki_angle = 0.18;  //0.02
 double Kd_angle = 0.09; //0.3
 
 // PID for Wall Following (Steering)
-double kP_left = 0.4; // Tune this!
-double kI_left = 0.5;
-double kD_left = 0.15;
+double kP_left = 0.125  ; // Tune this! 0.4
+double kI_left = 0.0; // 0.5
+double kD_left = 0.0; // 0.1
 
 double kP_right = 0; // Tune this!
 double kI_right = 0.0;
@@ -190,6 +190,9 @@ void pidForward(double distance) {
 }
 */
 
+double TARGET_LEFT = -1.0;
+double TARGET_RIGHT = -1.0;
+
 double getDistError() {
     static double heldError = 0;   // remembers last good error
 
@@ -197,8 +200,10 @@ double getDistError() {
     double rightDist = getRightSideDist();
 
     int WALL_THRESHOLD = 120; // 120 mm (12 cm)
-    double TARGET_LEFT = 51.5;
-    double TARGET_RIGHT = 50.0;
+    if(TARGET_LEFT == -1.0) {
+        TARGET_LEFT = leftDist;
+        TARGET_RIGHT = rightDist;
+    }
 
     bool leftWall = (leftDist > 0 && leftDist < WALL_THRESHOLD);
     bool rightWall = (rightDist > 0 && rightDist < WALL_THRESHOLD);
@@ -609,6 +614,8 @@ void pidForwardIMU(double remaining_dist){
     }
     Serial.println("Exited PID loop");
 }
+
+
 
 
 void pidForward(double distance) {
@@ -1114,8 +1121,6 @@ void pidForward(double distance) {
 }
 
 */
-
-
 
 
 void pidForwardLeftWallFollow() {
