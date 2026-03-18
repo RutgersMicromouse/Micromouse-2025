@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
-#include "../IMU/imu.h"
-#include "../Motors/motors.h"
+#include "imu.h"
+#include "motors.h"
 
 void straight(char direction, int distance);
 void straightASTAR(char direction);
