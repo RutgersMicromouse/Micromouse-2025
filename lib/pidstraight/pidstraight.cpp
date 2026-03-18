@@ -15,7 +15,7 @@ double Kd_angle = 0.09; //0.3
 // PID for Wall Following (Steering)
 double kP_left = 0.125  ; // Tune this! 0.4
 double kI_left = 0.0; // 0.5
-double kD_left = 0.0; // 0.1
+double kD_left = 0.25; // 0.1
 
 double kP_right = 0; // Tune this!
 double kI_right = 0.0;
