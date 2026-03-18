@@ -73,6 +73,7 @@ void setup() {
 
    startUpcheck(); // waits for hand in front to start up
    imuSetup(); // re-calibrate IMU after startup check
+   pidForwardSetup();
 
   //  pidForward(180*16);
   // pidForward(180*3);

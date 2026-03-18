@@ -12,6 +12,7 @@
 #include "ioexpander.h"
 
 // use PID to drive forward in mm
+void pidForwardSetup();
 void pidForwardIMU(double remaining_dist);
 void pidForward(double distance);
 
