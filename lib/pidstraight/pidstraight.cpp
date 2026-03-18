@@ -13,9 +13,9 @@ double Ki_angle = 0.18;  //0.02
 double Kd_angle = 0.09; //0.3
 
 // PID for Wall Following (Steering)
-double kP_left = 1; // Tune this!
-double kI_left = 0.0;
-double kD_left = 0;
+double kP_left = 0.4; // Tune this!
+double kI_left = 0.5;
+double kD_left = 0.15;
 
 double kP_right = 0; // Tune this!
 double kI_right = 0.0;
@@ -647,7 +647,7 @@ void pidForward(double distance) {
     double steerOutTotal = 0;
 
     // --- Wall Constants ---
-    const double IDEAL_LEFT = 51.5;  
+    const double IDEAL_LEFT = 53.5;  
     const double IDEAL_RIGHT = 50.0; 
     const double TOLERANCE = 5.0;    
     const double MAX_WALL = 120.0;   
