@@ -1,7 +1,7 @@
 #include "pidStraight.h"
 #include "pidRotate.h"
-#include "../IMU/imu.h"
-#include "../distanceSensors/distanceSensors.h"
+#include "imu.h"
+#include "distanceSensors.h"
 
 #define rightSensor 3
 #define leftSensor 4
@@ -88,13 +88,13 @@ void straight(char direction, int distance)
 
     double speed = baseSpeed;
 
-    Serial.printf("Decel Time: %lf\n", decelTime);
+    // Serial.printf("Decel Time: %lf\n", decelTime);
 
-    Serial.printf("Decel Rate: %lf\n", decelRate);
+    // Serial.printf("Decel Rate: %lf\n", decelRate);
 
-    Serial.printf("Total Time: %lf\n", (constantRatio*runTime)+decelTime);
+    // Serial.printf("Total Time: %lf\n", (constantRatio*runTime)+decelTime);
 
-    Serial.printf("Time Starts to Decelerate: %lf\n", (constantRatio*runTime));
+    // Serial.printf("Time Starts to Decelerate: %lf\n", (constantRatio*runTime));
 
     while((timeElapsed < (constantRatio * runTime) + decelTime))
     {
@@ -140,7 +140,7 @@ void straight(char direction, int distance)
         oldError = currentError;
         oldTime = currentTime;
 
-        Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
+        // Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
 
 
     }
@@ -234,7 +234,7 @@ void straightASTAR(char direction)
         oldError = currentError;
         oldTime = currentTime;
 
-        Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
+        // Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
 
 
     }

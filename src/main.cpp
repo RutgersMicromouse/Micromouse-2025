@@ -1,14 +1,14 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
-#include "../lib/IMU/imu.h"
-#include "../lib/distanceSensors/distanceSensors.h"
-#include "../lib/Motors/motors.h"
-#include "../lib/PIDMovement/pidRotate.h"
-#include "../lib/PIDMovement/pidStraight.h"
-#include "../lib/pathfinding/API.h"
-#include "../lib/pathfinding/Astar.h"
-#include "../lib/pathfinding/floodfill.h"
+#include "imu.h"
+#include "distanceSensors.h"
+#include "motors.h"
+#include "pidRotate.h"
+#include "pidStraight.h"
+#include "API.h"
+#include "Astar.h"
+#include "floodfill.h"
 
 int bl = 160;
 const int HAND_THRESHOLD = 120;   // mm distance for hand detection

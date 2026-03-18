@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include "../Motors/motors.h"
-#include "../distanceSensors/distanceSensors.h"
-#include "../IMU/imu.h"
-#include "../PIDMovement/pidRotate.h"
-#include "../PIDMovement/pidStraight.h"
+#include "motors.h"
+#include "distanceSensors.h"
+#include "imu.h"
+#include "pidRotate.h"
+#include "pidStraight.h"
 
 #define SIM
 // #define REAL
