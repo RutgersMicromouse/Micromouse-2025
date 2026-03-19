@@ -52,7 +52,7 @@ void setup() {
   straight('N', 80);
   delay(500);
  
-  initialize_maze(16, 16, true); //Set to 16 16 for the maze center, 31 and 31
+  initialize_maze(15, 15, true); //Set to 15 15 for the maze center, 31 and 31
   floodfill();
   initialize_maze(1, 1, false);
   floodfill();
