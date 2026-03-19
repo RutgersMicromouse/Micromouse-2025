@@ -9,6 +9,7 @@
 #include "API.h"
 #include "Astar.h"
 #include "floodfill.h"
+#include "save.h"
 
 int bl = 160;
 const int HAND_THRESHOLD = 120;   // mm distance for hand detection
@@ -51,11 +52,21 @@ void setup() {
   //HALF BLOCK
   straight('N', 80);
   delay(500);
- 
-  initialize_maze(15, 15, true); //Set to 15 15 for the maze center, 31 and 31
+  if(digitalRead(6) == HIGH) {
+    Serial.println("EEPROM switch is HIGH, using saved maze data.");
+    load_memory(maze, 0, sizeof(maze));
+    mouse.location.x = mouse.location.y = 1;
+    mouse.direction = 'N';
+    initialize_maze(15, 15, false); 
+  } 
+  else{
+    initialize_maze(15, 15, true); //Set to 15 15 for the maze center, 31 and 31
+  }
   floodfill();
+  save_memory(maze, 0, sizeof(maze));
   initialize_maze(1, 1, false);
   floodfill();
+  save_memory(maze, 0, sizeof(maze));
   delay(250);
 
   turnTo('N');
