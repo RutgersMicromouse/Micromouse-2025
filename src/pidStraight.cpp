@@ -10,7 +10,7 @@ int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
 
-double baseTime = .370e6; //50 pwm --> 0.605 
+double baseTime = .410e6; //50 pwm --> 0.605      .370e6-3/19/26 
 double blockLength = 160;
 
 //Center --> 4cm

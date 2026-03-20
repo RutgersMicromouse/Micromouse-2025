@@ -68,7 +68,7 @@ void setup() {
 
   straight('N', 80);
   Serial.println("Running A Star");
-  //Astar(5, 5); //16 by 16 for the center
+  Astar(16, 16); //16 by 16 for the center
   
 }
 
