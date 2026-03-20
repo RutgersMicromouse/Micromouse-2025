@@ -13,7 +13,6 @@
 
 // use PID to drive forward in mm
 void pidForwardSetup();
-void pidForwardIMU(double remaining_dist);
 void pidForward(double distance);
 
 // left wall following logic

@@ -9,7 +9,7 @@ bool startUpcheck() {
 
     while (!started) {
         delay(50);
-        if ( abs(front()) <= 50) {
+        if ( abs(front()) <= 20) {
             started = true;
         }
         Serial.println("Distance: " + String(front()) + "mm. Waiting for wall to start...");

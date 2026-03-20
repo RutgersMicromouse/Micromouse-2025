@@ -75,9 +75,9 @@ void setup() {
    imuSetup(); // re-calibrate IMU after startup check
    pidForwardSetup();
 
-  //  pidForward(180*16);
-  // pidForward(180*3);
-  // delay(5000);
+  //   pidForward(180*200);
+  // // // pidForward(180*3);
+  //   delay(5000);
 
   // // Default
    initialize();
@@ -134,11 +134,11 @@ void setup() {
 }
 
 void loop() {
-  double leftDist = getLeftSideDist();
-  double rightDist = getRightSideDist();
+  double leftDist = front();
 
   // 5. Print the results
-  Serial.printf("Left (mm): %.2f \t Right (mm): %.2f\n", leftDist, rightDist);
+  Serial.println("Front Distance: " + String(leftDist) + " mm");
+
   
   // A 50ms delay is much better for responsive robotics than 1000ms!
   delay(50);
