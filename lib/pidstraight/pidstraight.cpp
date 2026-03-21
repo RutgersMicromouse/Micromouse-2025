@@ -8,12 +8,12 @@ double Ki_dist = 0.0;
 double Kd_dist = 0.0; 
 
 // --- PID for Angle Anchor (The core steering you requested) ---
-double Kp_angle = 0.8; 
+double Kp_angle = 1;//0.8; 
 double Ki_angle = 0.0; 
-double Kd_angle = 0.1;//0.2; //.2
+double Kd_angle = 0;//0.1;//0.2; //.2
 
 // --- Unified Navigation Constants (The "Nudge") ---
-double Km = 0.4;//0.2;//0.7;  // How much the walls shift the IMU target
+double Km = 0;//0.4;//0.2;//0.7;  // How much the walls shift the IMU target
 double Td = 0;//0.1;//0.4;  // Damping for the wall shift
 
 // --- Calibration and Thresholds ---
@@ -132,15 +132,15 @@ void pidForward(double distance_mm) {
              n++;
             }
         
-        if(l_wall < 5) {
-            leftPWM += 7;
-            rightPWM -= 7;
-        }
+        // if(l_wall < 5) {
+        //     leftPWM += 7;
+        //     rightPWM -= 7;
+        // }
 
-        if(r_wall < 5) {
-            leftPWM -= 7;
-            rightPWM += 7;
-        }
+        // if(r_wall < 5) {
+        //     leftPWM -= 7;
+        //     rightPWM += 7;
+        // }
         setLeftPWM(constrain(leftPWM, -180, 180));
         setRightPWM(constrain(rightPWM, -180, 180));
         
