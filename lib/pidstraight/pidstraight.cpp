@@ -132,7 +132,15 @@ void pidForward(double distance_mm) {
              n++;
             }
         
+        if(l_wall < 5) {
+            leftPWM += 7;
+            rightPWM -= 7;
+        }
 
+        if(r_wall < 5) {
+            leftPWM -= 7;
+            rightPWM += 7;
+        }
         setLeftPWM(constrain(leftPWM, -180, 180));
         setRightPWM(constrain(rightPWM, -180, 180));
         
