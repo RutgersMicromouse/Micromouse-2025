@@ -75,11 +75,18 @@ void setup() {
    imuSetup(); // re-calibrate IMU after startup check
    pidForwardSetup();
 
-  //   pidForward(180*200);
-  // // // pidForward(180*3);
-  //   delay(5000);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    pidForward(180);
+    // pidForward(180*200);
+    // delay(5000);
 
-  // // Default
+  // // // Default
    initialize();
    runMaze('c');
    

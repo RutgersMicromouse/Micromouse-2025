@@ -1,0 +1,384 @@
+#include "pidstraight.h"
+#include <pidrotate.h>
+#include <sidedist.h>
+
+// --- PID for distance (Forward Progress) ---
+double Kp_dist = 0.0; // 0.15
+double Ki_dist = 0.0;
+double Kd_dist = 0.0; // 0.01
+
+// --- PID for angle offset (IMU/Gyro Mode) ---
+double Kp_angle = 0.7; 
+double Ki_angle = 0.0; 
+double Kd_angle = 0.1;
+
+// --- PID for Wall Following (Steering) ---
+double kP_left = 1.0; 
+double kI_left = 0.0; 
+double kD_left = 0.0; 
+
+double kP_right = 0.0; 
+double kI_right = 0.0;
+double kD_right = 0.0;
+
+double kP_dual = 0.0;
+double kI_dual = 0.0;
+double kD_dual = 0.0;
+
+double Km = 0.1; // Overall gain for unified correction
+double Td = 0.05; // Derivative time for unified correction
+double Ka = 0.1; // Angle correction gain for unified correction
+
+// --- Calibration and Thresholds ---
+double TARGET_LEFT = 0;  // Default fallback
+double TARGET_RIGHT = 0; // Default fallback
+const double MAX_WALL = 130.0; 
+const double I_LIMIT = 50.0; // Prevents integral windup
+double identity_diag[8] = {0.0, 90, 180, 270};
+
+/**
+ * Captures the current side distances to use as the "Ideal" center.
+ * Run this when the robot is physically centered in a known good cell.
+ */
+void pidForwardSetup() {
+    double left_sample = getLeftSideDist();
+    double right_sample = getRightSideDist();
+    
+    TARGET_LEFT = left_sample;
+    TARGET_RIGHT = right_sample;
+
+    // Only update if sensors actually see a wall (avoiding inf or 0)
+    // if (left_sample > 10 && left_sample < MAX_WALL && abs(left_sample - TARGET_LEFT) > 5) TARGET_LEFT = left_sample;
+    // if (right_sample > 10 && right_sample < MAX_WALL && abs(right_sample - TARGET_RIGHT) > 5) TARGET_RIGHT = right_sample;
+    
+    //Serial.printf("Calibrated! Target L: %.2f, Target R: %.2f\n", TARGET_LEFT, TARGET_RIGHT);
+}
+
+void pidForward(double distance_mm) {
+    int n = 0;
+    int state = -1;
+    int last_state = -1;
+    int basespeed = 140;
+    double encoder_per_mm = TICKS_PER_ROTATION / (WHEEL_DIAM * PI);
+    double difference = 1 * encoder_per_mm;
+    double goal_ticks = (distance_mm * encoder_per_mm) + difference;
+
+    encLeft.write(0);
+    encRight.write(0);
+
+    double t_old = micros(); // This replaces 'oldTime'
+    double err_steer_prev = 0; // This replaces 'oldError'
+    double err_dist_int = 0, err_dist_prev = 0;
+    double err_steer_int = 0;
+
+    double last_l_wall = TARGET_LEFT;
+    double last_r_wall = TARGET_RIGHT;
+
+    // Determine target world angle once
+    double goal_angle = 0;
+    double curr_ang = angle();
+    for(int i = 0; i < 8; i++) {
+        double diff = identity_diag[i] - curr_ang;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+        if (abs(diff) < abs(goal_angle - curr_ang)) goal_angle = identity_diag[i];
+    }
+
+    // if (abs(angle() - goal_angle)>5){
+    //     turnTo(goal_angle);
+    //     delay(200);
+    // }
+
+    while (true) {
+        // --- 1. SENSING ---
+        double curL = -encLeft.read();
+        double curR = -encRight.read();
+        double avgTicks = (abs(curL) + abs(curR)) / 2.0;
+
+        double t_now = micros();
+        double dt = (t_now - t_old) / 1e6;
+        if (dt <= 0) dt = 0.001;
+        t_old = t_now;
+
+        // --- 2. EXIT CONDITIONS ---
+        if (avgTicks >= goal_ticks || front() < 70) break;
+
+        // --- 3. DISTANCE PID (Forward) ---
+        double err_dist = goal_ticks - avgTicks;
+        err_dist_int = constrain(err_dist_int + (err_dist * dt), -I_LIMIT, I_LIMIT);
+        double distOut = (Kp_dist * err_dist) + (Ki_dist * err_dist_int) + (Kd_dist * (err_dist - err_dist_prev) / dt);
+        err_dist_prev = err_dist;
+
+        // --- 4. SPLIT STEERING LOGIC ---
+        double l_wall = getLeftSideDist();
+        double r_wall = getRightSideDist();
+        if (l_wall == -1) l_wall = last_l_wall;
+        if (r_wall == -1) r_wall = last_r_wall;
+        last_l_wall = l_wall;
+        last_r_wall = r_wall;
+        bool hasL = (l_wall > 0 && l_wall < MAX_WALL);
+        bool hasR = (r_wall > 0 && r_wall < MAX_WALL);
+
+        double steerOut = 0;
+        double current_err = 0;
+        double p_gain = 0, i_gain = 0, d_gain = 0;
+
+        // if (hasL && hasR) {
+        //     // DUAL WALL: Average the tunes for centering
+        //     // Serial.printf("Dual Wall Mode | L: %.2f (Err: %.2f) | R: %.2f (Err: %.2f)\n", l_wall, l_wall - TARGET_LEFT, r_wall, r_wall - TARGET_RIGHT);
+        //     state = 0;
+        //     current_err = (l_wall - TARGET_LEFT) - (r_wall - TARGET_RIGHT);
+        //     p_gain = kP_dual;
+        //     i_gain = kI_dual;
+        //     d_gain = kD_dual;
+        // } else if (hasL) {
+        //     // LEFT ONLY
+        //     // Serial.printf("Left Wall Mode | L: %.2f (Err: %.2f)\n", l_wall, l_wall - TARGET_LEFT);
+        //     state = 1;
+        //     current_err = (l_wall - TARGET_LEFT);
+        //     p_gain = kP_left;
+        //     i_gain = kI_left;
+        //     d_gain = kD_left;
+        // } 
+        // else if (hasR) {
+        //     // RIGHT ONLY (Reverse error polarity)
+        //     // Serial.printf("Right Wall Mode | R: %.2f (Err: %.2f)\n", r_wall, r_wall - TARGET_RIGHT);
+        //     state = 2;
+        //     current_err = -(r_wall - TARGET_RIGHT);
+        //     p_gain = kP_right;
+        //     i_gain = kI_right;
+        //     d_gain = kD_right;
+        // } 
+        // else {
+        //     // IMU MODE
+        //     // Serial.printf("IMU Mode | Angle: %.2f | Goal: %.2f | Err: %.2f\n", angle(), goal_angle, goal_angle - angle());
+        //     state = 3;
+        //     double ang_err = goal_angle - angle();
+        //     while (ang_err > 180) ang_err -= 360;
+        //     while (ang_err < -180) ang_err += 360;
+            
+        //     current_err = ang_err;
+        //     p_gain = Kp_angle;
+        //     i_gain = Ki_angle;
+        //     d_gain = Kd_angle;
+        // }
+
+        //Testing States:
+
+        // LEFT ONLY
+            Serial.printf("Left Wall Mode | L: %.2f (Err: %.2f)\n", l_wall, l_wall - TARGET_LEFT);
+            state = 1;
+            current_err = (l_wall - TARGET_LEFT);
+            p_gain = kP_left;
+            i_gain = kI_left;
+            d_gain = kD_left;
+        
+
+        // Calculate Integrated Steer
+        if (state == 3){
+            err_steer_int = constrain(err_steer_int + (current_err * dt), -I_LIMIT, I_LIMIT);
+            double d_term = (current_err - err_steer_prev) / dt;
+            steerOut = (p_gain * current_err) + (i_gain * err_steer_int) + (d_gain * d_term);
+            err_steer_prev = current_err;
+
+            // --- 5. MOTOR MAPPING ---
+            // 1.25 multiplier kept from your original logic
+            double leftPWM = basespeed + (distOut + steerOut) * 1.25;
+            double rightPWM = basespeed + (distOut - steerOut) * 1.25;
+
+            // Deadband handling
+            if (abs(leftPWM) < 35) leftPWM = (leftPWM > 0) ? 40 : -40;
+            if (abs(rightPWM) < 35) rightPWM = (rightPWM > 0) ? 40 : -40;
+
+            if (n < 1){
+                leftPWM = leftPWM-40;
+                n += 1;
+            }
+            setLeftPWM(constrain(leftPWM, -180, 180));
+            setRightPWM(constrain(rightPWM, -180, 180));
+
+        } else if (state == 0){
+            // current_err is your distance from center
+            current_err = (l_wall - TARGET_LEFT) - (r_wall - TARGET_RIGHT);
+            double derError = (current_err - err_steer_prev) / dt;
+            
+            double angleError = goal_angle - angle();
+            while (angleError < -180) angleError += 360;
+            while (angleError > 180) angleError -= 360;
+
+            // Unified Formula: Km (Wall P) + Td (Wall D) + Ka (IMU P)
+            double correction = (Km * current_err) + (Td * Km * derError) + (Ka * angleError);
+
+            double leftPWM = basespeed - correction;
+            double rightPWM = basespeed + correction;
+
+            if (n < 1) {
+                leftPWM -= 40; // Your reliable kickstart
+                n++;
+            }
+
+            // Output with Safety Constraints
+            setLeftPWM(constrain(leftPWM, -180, 180));
+            setRightPWM(constrain(rightPWM, -180, 180));
+            
+            // Debugging
+            // Serial.printf("Dual | Err: %.2f | AngErr: %.2f | Corr: %.2f\n", current_err, angleError, correction);
+            
+            err_steer_prev = current_err;
+
+        } else {
+            err_steer_int = constrain(err_steer_int + (current_err * dt), -I_LIMIT, I_LIMIT);
+            double d_term = (current_err - err_steer_prev) / dt;
+            steerOut = (p_gain * current_err) + (i_gain * err_steer_int) + (d_gain * d_term);
+            err_steer_prev = current_err;
+
+            // --- 5. MOTOR MAPPING ---
+            // 1.25 multiplier kept from your original logic
+            double leftPWM = basespeed + (distOut - steerOut) * 1.25;
+            double rightPWM = basespeed + (distOut + steerOut) * 1.25;
+
+            // Deadband handling
+            if (abs(leftPWM) < 35) leftPWM = (leftPWM > 0) ? 40 : -40;
+            if (abs(rightPWM) < 35) rightPWM = (rightPWM > 0) ? 40 : -40;
+
+            if (n < 1){
+                leftPWM = leftPWM-40;
+                n += 1;
+            }
+
+            // --- Left Wall Debugging Print ---
+            // Serial.printf("GOAL: %.2f | CURR: %.2f | ERR: %.2f | L_PWM: %.2f | R_PWM: %.2f | P_GAIN: %.2f\n", 
+            //             TARGET_LEFT, 
+            //             l_wall, 
+            //             current_err, 
+            //             leftPWM, 
+            //             rightPWM,
+            //             p_gain);
+
+            setLeftPWM(constrain(leftPWM, -180, 180));
+            setRightPWM(constrain(rightPWM, -180, 180));
+        }
+
+        if (state != last_state) {
+            err_steer_prev = current_err; // Wipe the memory to prevent a "derivative spike"
+            last_state = state;
+        }
+    }
+    setLeftPWM(0);
+    setRightPWM(0);
+    delay(500);
+    // turnTo(goal_angle); // Re-align to world angle at the end of the move
+    // delay(500);
+}
+
+// double getDistError()
+// {
+//     static double heldError = 0;   // remembers last good error
+
+//     int16_t leftDist  = getLeftSideDist();
+//     int16_t rightDist = getRightSideDist();
+
+//     int WALL_THRESHOLD = 8;   // cm
+//     double TARGET_DIST = 4;   // center distance from wall
+
+//     bool leftWall  = leftDist  < WALL_THRESHOLD;
+//     bool rightWall = rightDist < WALL_THRESHOLD;
+
+//     if(leftWall && rightWall)
+//     {
+//         // normal centering
+//         heldError = rightDist - leftDist;
+//     }
+//     else if(leftWall)
+//     {
+//         // follow left wall
+//         heldError = TARGET_DIST - leftDist;
+//     }
+//     else if(rightWall)
+//     {
+//         // follow right wall
+//         heldError = rightDist - TARGET_DIST;
+//     }
+//     else
+//     {
+//         // no walls detected
+//         // hold previous error so robot continues straight
+//     }
+
+//     heldError = constrain(heldError, -8, 8);
+
+//     return heldError;
+// }
+
+void pidForwardLeftWallFollow() {
+    
+    // Find the closest world angle axis
+    double goal_angle;
+    int closest_index = 0;
+    double arr_diag[8];
+
+    for (int i = 0; i <= 7; i++) {
+        arr_diag[i] = identity_diag[i] - angle();
+        if (arr_diag[i] > 180) arr_diag[i] -= 360;
+        if (arr_diag[i] < -180) arr_diag[i] += 360;
+        if (abs(arr_diag[i]) < abs(arr_diag[closest_index])) {
+            closest_index = i;
+        }
+    }
+    goal_angle = identity_diag[closest_index];
+
+        
+    double t_old = micros();
+    double error_angle = goal_angle - angle();
+    if (error_angle > 180) error_angle -= 360;
+    if (error_angle < -180) error_angle += 360;
+
+    double error_int_angle;
+    double error_deriv_angle;
+    double error_angle_old = error_angle;
+    double angleOut;
+
+    double sampleTime = micros();
+    double sampleRight = encRight.read();
+    double sampleLeft = encLeft.read();
+
+    while (true) {
+        if (!leftWall()) {
+            delay(120);
+            setRightPWM(0);
+            setLeftPWM(0);
+            return;
+        }
+
+        if (micros() > sampleTime + 1e5) {
+            if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) {
+                setRightPWM(0);
+                setLeftPWM(0);
+                return;
+            }
+            sampleTime = micros();
+            sampleRight = encRight.read();
+            sampleLeft = encLeft.read();
+        }
+
+        if (front() < 90) {
+            setRightPWM(0);
+            setLeftPWM(0);
+            return;
+        }
+
+        error_angle = goal_angle - angle();
+        if (error_angle > 180) error_angle -= 360;
+        if (error_angle < -180) error_angle += 360;
+
+        error_int_angle += error_angle * (micros() - t_old);
+        error_deriv_angle = (error_angle - error_angle_old) / (micros() - t_old);
+
+        angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
+        setLeftPWM(125 - angleOut);
+        setRightPWM(125 + angleOut);
+
+        error_angle_old = error_angle;
+        t_old = micros();
+    }
+}

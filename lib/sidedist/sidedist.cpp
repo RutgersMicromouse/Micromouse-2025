@@ -11,21 +11,16 @@ void sideDistSetup() {
 }
 
 // Function to read the left sensor
-double getLeftSideDist() {
-  unsigned long pulse = pulseIn(SENSOR_LEFT_PIN, HIGH, 25000);
-  if (pulse > 0 && pulse < 2000) {
-    double dist = 0.75 * (pulse - 1000);
-    return (dist < 0) ? 0 : dist; // return 0 if negative, else return dist
-  }
-  return -1; // Out of range or error
+double getLeftSideDist()
+{
+    int16_t leftTime = pulseIn(SENSOR_LEFT_PIN, HIGH);
+    double leftDistance = (leftTime - 1000) * 3 / 4;
+    return leftDistance / 10;
 }
 
-// Function to read the right sensor
-double getRightSideDist() {
-  unsigned long pulse = pulseIn(SENSOR_RIGHT_PIN, HIGH, 25000);
-  if (pulse > 0 && pulse < 2000) {
-    double dist = 0.75 * (pulse - 1000);
-    return (dist < 0) ? 0 : dist; 
-  }
-  return -1; // Out of range or error
+double getRightSideDist()
+{
+    int16_t rightTime = pulseIn(SENSOR_RIGHT_PIN, HIGH);
+    double rightDistance = (rightTime - 1000) * 3 / 4;
+    return rightDistance / 10;
 }
