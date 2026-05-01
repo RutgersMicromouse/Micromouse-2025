@@ -8,13 +8,13 @@ double Ki_dist = 0.0;
 double Kd_dist = 0.0; 
 
 // --- PID for Angle Anchor (The core steering you requested) ---
-double Kp_angle = 1;//0.8; 
+double Kp_angle = 0.7;//0.5;//0.8; 
 double Ki_angle = 0.0; 
-double Kd_angle = 0;//0.1;//0.2; //.2
+double Kd_angle = 0.0;//0.15;//0.2; //.2
 
 // --- Unified Navigation Constants (The "Nudge") ---
-double Km = 0;//0.4;//0.2;//0.7;  // How much the walls shift the IMU target
-double Td = 0;//0.1;//0.4;  // Damping for the wall shift
+double Km = 0;//0.22;//0.1;//0.2;//0.4;//0.2;//0.7;  // How much the walls shift the IMU target
+double Td = 0.0;//0.1;//0.4;  // Damping for the wall shift
 
 // --- Calibration and Thresholds ---
 double TARGET_LEFT = 0;  
@@ -31,9 +31,11 @@ void pidForwardSetup() {
 void pidForward(double distance_mm) {
     int n = 0;
     int basespeed = 135;
+    
+    // --- 1. PRE-CALCULATIONS ---
     double encoder_per_mm = TICKS_PER_ROTATION / (WHEEL_DIAM * PI);
-    double difference = 3 * encoder_per_mm; // how many ticks off we want to be at the end, positive means we want to undershoot
-    double goal_ticks = (distance_mm * encoder_per_mm)+difference;
+    double difference = 5 * encoder_per_mm; 
+    double goal_ticks = (distance_mm * encoder_per_mm) + difference;
 
     encLeft.write(0);
     encRight.write(0);
@@ -46,7 +48,7 @@ void pidForward(double distance_mm) {
     double last_l_wall = TARGET_LEFT;
     double last_r_wall = TARGET_RIGHT;
 
-    // --- 1. Find Absolute Goal Angle ---
+    // --- 2. FIND ABSOLUTE GOAL ANGLE (Cardinal Direction) ---
     double goal_angle = 0;
     double curr_ang = angle();
     double min_diff = 1000;
@@ -60,29 +62,24 @@ void pidForward(double distance_mm) {
         }
     }
 
-    // if (abs(goal_angle - angle()) > 30 && goal_angle != 0) {
-    //     turnTo(goal_angle);
-    // } else if (goal_angle ==0){
-    //     if (angle() > 30 || angle() > 330){
-    //         turnTo(0);
-    //     }
-    // }
-
     while (true) {
-        // --- 2. SENSING ---
+        // --- 3. SENSING & TIMING ---
         double avgTicks = (abs(-encLeft.read()) + abs(-encRight.read())) / 2.0;
         double t_now = micros();
         double dt = (t_now - t_old) / 1e6;
         if (dt <= 0) dt = 0.001;
         t_old = t_now;
 
+        // EXIT CONDITIONS: Reached distance OR wall in front
         if (avgTicks >= goal_ticks || front() < 70) break;
 
-        // --- 3. WALL SENSING (The "Nudge") ---
+        // --- 4. WALL SENSING (The "Nudge") ---
         double l_wall = getLeftSideDist();
         double r_wall = getRightSideDist();
-        if (l_wall == -1) l_wall = last_l_wall;
-        if (r_wall == -1) r_wall = last_r_wall;
+        
+        // Filter out bad readings or gaps
+        if (l_wall == -1 || l_wall > MAX_WALL) l_wall = last_l_wall;
+        if (r_wall == -1 || r_wall > MAX_WALL) r_wall = last_r_wall;
         last_l_wall = l_wall;
         last_r_wall = r_wall;
 
@@ -90,66 +87,58 @@ void pidForward(double distance_mm) {
         bool hasL = (l_wall > 0 && l_wall < MAX_WALL);
         bool hasR = (r_wall > 0 && r_wall < MAX_WALL);
 
+        // Logic to stay centered between walls
         if (hasL && hasR) {
             wallError = (l_wall - TARGET_LEFT) - (r_wall - TARGET_RIGHT);
-        } else if (hasL) {
-            wallError = (l_wall - TARGET_LEFT) * 2.0;
-        } else if (hasR) {
-            wallError = -(r_wall - TARGET_RIGHT) * 2.0;
-        }
+        } 
+        // else if (hasL) {
+        //     wallError = (l_wall - TARGET_LEFT) * 2.0;
+        // } else if (hasR) {
+        //     wallError = -(r_wall - TARGET_RIGHT) * 2.0;
+        // }
 
-        // Calculate wall correction to shift the IMU target
+        // Calculate wall nudge (Damping included via Td)
         double wallDeriv = (wallError - err_wall_prev) / dt;
         double wallNudge = (Km * wallError) + (Td * Km * wallDeriv);
         err_wall_prev = wallError;
 
-        //Serial.printf("Wall Error: %.2f | Wall Nudge: %.2f | Goal Angle: %.2f\n", wallError, wallNudge, goal_angle);
-        // --- 4. CORE IMU PID (The Logic You Requested) ---
-        // We add wallNudge to the angle error to "trick" the IMU into centering
-        double current_err = (goal_angle - angle());
-        while (current_err > 180) current_err -= 360;
-        while (current_err < -180) current_err += 360;
-        
-        // Add the wall nudge here
-        current_err -= wallNudge;
+        // --- 5. SENSOR FUSION PID ---
+        // A. Calculate Heading Error from IMU
+        double imu_err = (goal_angle - angle());
+        while (imu_err > 180) imu_err -= 360;
+        while (imu_err < -180) imu_err += 360;
 
+        // B. Apply the Wall Nudge to the Error
+        // This "fools" the PID into correcting for both wall-center and IMU drift
+        double current_err = imu_err + wallNudge; 
+
+        // C. Standard PID Math
         err_steer_int = constrain(err_steer_int + (current_err * dt), -I_LIMIT, I_LIMIT);
         double d_term = (current_err - err_steer_prev) / dt;
         double steerOut = (Kp_angle * current_err) + (Ki_angle * err_steer_int) + (Kd_angle * d_term);
-        //Serial.printf("Angle Error: %.2f | Steer Out: %.2f\n", current_err, steerOut);
-
-        // --- 5. MOTOR MAPPING ---
-        double leftPWM = basespeed + (steerOut * 1);
-        double rightPWM = basespeed - (steerOut * 1);
-
-        // Deadband & Kickstart
-        if (abs(leftPWM) < 35) leftPWM = (leftPWM > 0) ? 40 : -40;
-        if (abs(rightPWM) < 35) rightPWM = (rightPWM > 0) ? 40 : -40;
-        if (n < 2) {
-             leftPWM -= 25; 
-             leftPWM *= 0.75;
-             rightPWM *= 0.75;
-             n++;
-            }
-        
-        // if(l_wall < 5) {
-        //     leftPWM += 7;
-        //     rightPWM -= 7;
-        // }
-
-        // if(r_wall < 5) {
-        //     leftPWM -= 7;
-        //     rightPWM += 7;
-        // }
-        setLeftPWM(constrain(leftPWM, -180, 180));
-        setRightPWM(constrain(rightPWM, -180, 180));
         
         err_steer_prev = current_err;
+
+        // --- 6. MOTOR MAPPING ---
+        double leftPWM = basespeed + steerOut;
+        double rightPWM = basespeed - steerOut;
+
+        // Soft start for the first few iterations
+        if (n < 5) {
+             leftPWM *= 0.7;
+             rightPWM *= 0.7;
+             n++;
+        }
+
+        // Apply constraints and set motors
+        setLeftPWM(constrain(leftPWM, -200, 200));
+        setRightPWM(constrain(rightPWM, -200, 200));
     }
 
+    // --- 7. STOP ---
     setLeftPWM(0);
     setRightPWM(0);
-    delay(400);
+    delay(200); // Short settle time
 }
 
 void pidForwardLeftWallFollow() {

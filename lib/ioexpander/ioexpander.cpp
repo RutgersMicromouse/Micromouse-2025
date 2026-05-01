@@ -25,7 +25,7 @@ bool rightWall() {
     double dist = getRightSideDist();
     
     // If the sensor timed out OR the distance is greater than the 130mm threshold
-    if (dist == -1 || dist > 130) {
+    if (dist == -1 || dist > 100) {
         return false; // It's an opening
     }
     return true; // Wall detected
@@ -35,7 +35,7 @@ bool leftWall() {
     double dist = getLeftSideDist();
     
     // If the sensor timed out OR the distance is greater than the 130mm threshold
-    if (dist == -1 || dist > 130) {
+    if (dist == -1 || dist > 100) {
         return false; // It's an opening
     }
     return true; // Wall detected
