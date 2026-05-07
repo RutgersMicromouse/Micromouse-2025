@@ -5,7 +5,7 @@ void labyrinthLoop() {
 
         if (!API::wallLeft()) {
             API::turnLeft();
-            API::moveForward();
+            API::moveForward(1);
             pidForwardLeftWallFollow();  // move after turn
         } else if (!API::wallFront()) {
             pidForwardLeftWallFollow();  // no wall ahead, keep going

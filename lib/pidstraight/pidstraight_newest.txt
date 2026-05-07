@@ -1,0 +1,251 @@
+#include "pidstraight.h"
+#include <pidrotate.h>
+#include <sidedist.h>
+
+// --- PID for distance (Forward Progress) ---
+double Kp_dist = 0.0; 
+double Ki_dist = 0.0;
+double Kd_dist = 0.0; 
+
+// --- PID for Angle Anchor (IMU/Gyro Mode) ---
+double Kp_angle = 0.7; 
+double Ki_angle = 0.0; 
+double Kd_angle = 0.1;
+
+// --- Unified Wall Following Constants ---
+// Km: How hard to push away from walls
+// Td: Damping to prevent fishtailing
+// Ka: How much the IMU "fights" to stay at the goal angle
+double Km = 1.25;  
+double Td = 0.9;//0.2; 
+double Ka = 0.4;//0.4;  
+
+// --- Calibration and Thresholds ---
+double TARGET_LEFT = 0;  
+double TARGET_RIGHT = 0; 
+const double MAX_WALL = 130.0; 
+const double I_LIMIT = 50.0; 
+double identity_diag[4] = {0.0, 90.0, 180.0, 270.0};
+
+/**
+ * Captures current side distances to use as the "Ideal" center.
+ */
+void pidForwardSetup() {
+    TARGET_LEFT = getLeftSideDist()+getRightSideDist()/2.0;
+    TARGET_RIGHT = getRightSideDist()+getLeftSideDist()/2.0;
+}
+
+void pidForward(double distance_mm) {
+    int n = 0;
+    int state = -1;
+    int last_state = -1;
+    int basespeed = 140;
+    
+    double encoder_per_mm = TICKS_PER_ROTATION / (WHEEL_DIAM * PI);
+    double goal_ticks = (distance_mm * encoder_per_mm);
+
+    encLeft.write(0);
+    encRight.write(0);
+
+    double t_old = micros(); 
+    double err_steer_prev = 0; 
+    double err_dist_int = 0, err_dist_prev = 0;
+    double err_steer_int = 0;
+
+    double last_l_wall = TARGET_LEFT;
+    double last_r_wall = TARGET_RIGHT;
+
+    // --- Determine Target World Angle ---
+    double goal_angle = 0;
+    double curr_ang = angle();
+    double min_diff = 1000;
+    for(int i = 0; i < 4; i++) {
+        double diff = identity_diag[i] - curr_ang;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+        if (abs(diff) < min_diff) {
+            min_diff = abs(diff);
+            goal_angle = identity_diag[i];
+        }
+    }
+
+    while (true) {
+        // --- 1. SENSING ---
+        double curL = -encLeft.read();
+        double curR = -encRight.read();
+        double avgTicks = (abs(curL) + abs(curR)) / 2.0;
+
+        double t_now = micros();
+        double dt = (t_now - t_old) / 1e6;
+        if (dt <= 0) dt = 0.001;
+        t_old = t_now;
+
+        // --- 2. EXIT CONDITIONS ---
+        if (avgTicks >= goal_ticks || front() < 70) break;
+
+        // --- 3. DISTANCE PID (Forward) ---
+        double err_dist = goal_ticks - avgTicks;
+        err_dist_int = constrain(err_dist_int + (err_dist * dt), -I_LIMIT, I_LIMIT);
+        double distOut = (Kp_dist * err_dist) + (Ki_dist * err_dist_int) + (Kd_dist * (err_dist - err_dist_prev) / dt);
+        err_dist_prev = err_dist;
+
+        // --- 4. STEERING LOGIC ---
+        double l_wall = getLeftSideDist();
+        double r_wall = getRightSideDist();
+        
+        // Option B: Memory filling
+        if (l_wall == -1) l_wall = last_l_wall;
+        if (r_wall == -1) r_wall = last_r_wall;
+        last_l_wall = l_wall;
+        last_r_wall = r_wall;
+
+        bool hasL = (l_wall > 0 && l_wall < MAX_WALL);
+        bool hasR = (r_wall > 0 && r_wall < MAX_WALL);
+
+        double current_err = 0;
+
+        // if (hasL && hasR) {
+        //     state = 0; // Dual Wall
+        //     current_err = (l_wall - TARGET_LEFT) - (r_wall - TARGET_RIGHT);
+        // } else if (hasL) {
+        //     state = 1; // Left Wall Only
+        //     current_err = (l_wall - TARGET_LEFT) * 2.0; // Scale up to match dual sensitivity
+        // } else if (hasR) {
+        //     state = 2; // Right Wall Only
+        //     current_err = -(r_wall - TARGET_RIGHT) * 2.0; 
+        // } else {
+        //     state = 3; // IMU ONLY
+        //     double ang_err = goal_angle - angle();
+        //     while (ang_err > 180) ang_err -= 360;
+        //     while (ang_err < -180) ang_err += 360;
+        //     current_err = ang_err;
+        // }
+
+            state = 0; // Dual Wall
+            current_err = (l_wall - TARGET_LEFT) - (r_wall - TARGET_RIGHT);
+
+        // --- STATE TRANSITION PROTECTION ---
+        if (state != last_state) {
+            err_steer_prev = current_err;
+            err_steer_int = 0; 
+            last_state = state;
+        }
+
+        double leftPWM, rightPWM;
+
+        // --- 5. EXECUTION ---
+        if (state <= 2) { 
+            // ALL WALL MODES (0, 1, 2) use Unified Correction (Wall Error + IMU Anchor)
+            double derError = (current_err - err_steer_prev) / dt;
+            
+            double angleError = goal_angle - angle();
+            while (angleError < -180) angleError += 360;
+            while (angleError > 180) angleError -= 360;
+
+            // Unified Formula
+            double correction = (Km * current_err) + (Td * Km * derError) - (Ka * angleError);
+
+            leftPWM = basespeed + distOut - correction;
+            rightPWM = basespeed + distOut + correction;
+        } 
+        else { 
+            // IMU ONLY MODE (State 3) - Uses standard Angle PID
+            err_steer_int = constrain(err_steer_int + (current_err * dt), -I_LIMIT, I_LIMIT);
+            double d_term = (current_err - err_steer_prev) / dt;
+            double steerOut = (Kp_angle * current_err) + (Ki_angle * err_steer_int) + (Kd_angle * d_term);
+
+            leftPWM = basespeed + (distOut + steerOut) * 1.25;
+            rightPWM = basespeed + (distOut - steerOut) * 1.25;   
+        }
+
+        // --- DEADWIDTH & KICKSTART ---
+        if (abs(leftPWM) < 35) leftPWM = (leftPWM > 0) ? 40 : -40;
+        if (abs(rightPWM) < 35) rightPWM = (rightPWM > 0) ? 40 : -40;
+
+        if (n < 1) { 
+            leftPWM -= 35; // Reliable kickstart for standard gearboxes
+            n++; 
+        }
+
+        setLeftPWM(constrain(leftPWM, -400, 400));
+        setRightPWM(constrain(rightPWM, -400, 400));
+        
+        err_steer_prev = current_err;
+    }
+
+    setLeftPWM(0);
+    setRightPWM(0);
+}
+
+void pidForwardLeftWallFollow() {
+    
+    // Find the closest world angle axis
+    double goal_angle;
+    int closest_index = 0;
+    double arr_diag[8];
+
+    for (int i = 0; i <= 7; i++) {
+        arr_diag[i] = identity_diag[i] - angle();
+        if (arr_diag[i] > 180) arr_diag[i] -= 360;
+        if (arr_diag[i] < -180) arr_diag[i] += 360;
+        if (abs(arr_diag[i]) < abs(arr_diag[closest_index])) {
+            closest_index = i;
+        }
+    }
+    goal_angle = identity_diag[closest_index];
+
+        
+    double t_old = micros();
+    double error_angle = goal_angle - angle();
+    if (error_angle > 180) error_angle -= 360;
+    if (error_angle < -180) error_angle += 360;
+
+    double error_int_angle;
+    double error_deriv_angle;
+    double error_angle_old = error_angle;
+    double angleOut;
+
+    double sampleTime = micros();
+    double sampleRight = encRight.read();
+    double sampleLeft = encLeft.read();
+
+    while (true) {
+        if (!leftWall()) {
+            delay(120);
+            setRightPWM(0);
+            setLeftPWM(0);
+            return;
+        }
+
+        if (micros() > sampleTime + 1e5) {
+            if (abs(encRight.read() - sampleRight) < 2 || abs(encLeft.read() - sampleLeft) < 2) {
+                setRightPWM(0);
+                setLeftPWM(0);
+                return;
+            }
+            sampleTime = micros();
+            sampleRight = encRight.read();
+            sampleLeft = encLeft.read();
+        }
+
+        if (front() < 90) {
+            setRightPWM(0);
+            setLeftPWM(0);
+            return;
+        }
+
+        error_angle = goal_angle - angle();
+        if (error_angle > 180) error_angle -= 360;
+        if (error_angle < -180) error_angle += 360;
+
+        error_int_angle += error_angle * (micros() - t_old);
+        error_deriv_angle = (error_angle - error_angle_old) / (micros() - t_old);
+
+        angleOut = Kp_angle * error_angle + Ki_angle * error_int_angle + Kd_angle * error_deriv_angle;
+        setLeftPWM(125 - angleOut);
+        setRightPWM(125 + angleOut);
+
+        error_angle_old = error_angle;
+        t_old = micros();
+    }
+}

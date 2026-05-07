@@ -5,10 +5,18 @@
 #include "motors.h"
 #include "pidstraight.h"
 #include "pidrotate.h"
+#include "initializeHand.h"
+#include "sidedist.h"
 
 #include "Flood.h"
 #include "labyrinth.h"
 #include "firefighter.h"
+
+const int SENSOR_RIGHT_PIN = D9; 
+const int SENSOR_LEFT_PIN = D10;
+
+bool armed = false;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,52 +30,63 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH); // turns the builtin LED off (active low)
 
 
-  imuSetup();
-  tofSetup();
-  delay(50);
-  motorSetup();
 
-
-
-  Serial.println("Scanning I2C bus...");
-  
+    
   for (byte address = 1; address < 127; address++) {
     Wire.beginTransmission(address);
     byte error = Wire.endTransmission();
     if (error == 0) {
-      Serial.print("Found I2C device at 0x");
-      Serial.println(address, HEX);
-    }
+                }
   }
-  Serial.println("Scan done.");
+
+  tofSetup();
+  imuSetup();
+  delay(50);
+  motorSetup();
+  sideDistSetup();
 
   // move to middle of starting cell from back wall
-  //pidForward(50);
+
+  // for (int i = 0; i < 5; i++) {
+  //   API::turnHalf();
+  //   delay(200);
+  // }
 
   // // // Switch options:
   if(isFirefighter()) { // Do nothing for now
     while(1);
-    // Serial.println("Firefighter mode");
-    // init_GPIO();
+        // init_GPIO();
     // firefighterSetup();
     // firefighterLoop();
     return;
   } 
   if(isSpeedrun()) {
-    Serial.println("Lightning McQueen mode");
-    initialize(); // load switch should also be on
+        initialize(); // load switch should also be on
     delay(100);
     speedrun();
     return;
   }
   if(isLabyrinth()) {
-    Serial.println("Labyrinth mode");
-    labyrinthLoop();
+        labyrinthLoop();
     return;    
   }
 
-  // // Default
-  Serial.println("Exploration mode");
+   startUpcheck(); // waits for hand in front to start up
+   imuSetup(); // re-calibrate IMU after startup check
+   pidForwardSetup();
+
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180);
+    // pidForward(180*200);
+    // delay(5000);
+
+  // // // Default
    initialize();
    runMaze('c');
    
@@ -122,16 +141,19 @@ void setup() {
 }
 
 void loop() {
-  delay(2000);
-  Serial.println("Hello main loop!");
-  // Serial.println(API::wallFront());
-  // Serial.print(API::wallLeft());
-  // Serial.print(" N ");
-  // Serial.println(API::wallRight());
+  // double leftDist = front();
 
-  // Serial.println(front());
+  // // 5. Print the results
+  // Serial.println("Front Distance: " + String(leftDist) + " mm");
 
-  // Serial.println(angle());
+  
+  // // A 50ms delay is much better for responsive robotics than 1000ms!
+  // delay(50);
 
-
+  double leftDist = getLeftSideDist();
+  double rightDist = getRightSideDist();
+  // 5. Print the results
+  Serial.println("Left Distance: " + String(leftDist) + " mm, Right Distance: " + String(rightDist) + " mm");
+  delay(50);
+  
 }

@@ -7,8 +7,8 @@ void tofSetup() {
     frontToF.setTimeout(500);
     if (!frontToF.init())
     {
-    Serial.println("Failed to detect and initialize time-of-flight sensor!");
-    while (1);
+        while (1);
+        Serial.println("Failed to detect and initialize front ToF sensor!");
     }
 
     // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
@@ -23,6 +23,7 @@ void tofSetup() {
     // inter-measurement period). This period should be at least as long as the
     // timing budget.
     frontToF.startContinuous(50);
+    Serial.println("Front ToF initialized");
 }
 
 // distance in mm

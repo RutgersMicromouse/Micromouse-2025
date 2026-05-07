@@ -1,4 +1,5 @@
 #include "ioexpander.h"
+#include <sidedist.h>
 
 bool isSaving() {
     return bitRead(ioExpanderRead(), 1);
@@ -20,11 +21,24 @@ bool isFirefighter(){
     return bitRead(ioExpanderRead(), 5);
 }
 
-bool rightWall(){
-    return bitRead(ioExpanderRead(), 6);
+bool rightWall() {
+    double dist = getRightSideDist();
+    
+    // If the sensor timed out OR the distance is greater than the 130mm threshold
+    if (dist == -1 || dist > 100) {
+        return false; // It's an opening
+    }
+    return true; // Wall detected
 }
-bool leftWall(){
-    return bitRead(ioExpanderRead(), 7);
+
+bool leftWall() {
+    double dist = getLeftSideDist();
+    
+    // If the sensor timed out OR the distance is greater than the 130mm threshold
+    if (dist == -1 || dist > 100) {
+        return false; // It's an opening
+    }
+    return true; // Wall detected
 }
 
 
@@ -37,16 +51,12 @@ byte ioExpanderRead() {
         readValue = Wire.read();
         readValue = readValue ^ 0xFF;  // xor so that 1 is on and 0 is off
         /*
-        Serial.print("IO expander: ");
-        // Print the 8 bits of the byte
+                // Print the 8 bits of the byte
         for (int i = 7; i >= 0; i--) {          // Start from the most significant bit (MSB)
-        Serial.print(bitRead(readValue, i));  // Extract and print each bit
-        }
-        Serial.println("");      
-        */
+                }
+                */
 
     } else {
-      Serial.println("IO Expander read failed");
-    }
+          }
     return readValue;
 }

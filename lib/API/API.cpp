@@ -65,6 +65,8 @@ void API::turnRight() {
         angle_goal = 0;
     }
 
+    angle_goal += 2;
+
     turnTo(angle_goal); //right 90 based on current orientation
     // delay(200);
     return;
@@ -86,9 +88,32 @@ void API::turnLeft() {
         angle_goal = 180;
     }
 
-    angle_goal += 1; // to fix undershoot
+    angle_goal -= 2; // to fix overshoot
 
     turnTo(angle_goal); //left 90 based on current orientation
+    // delay(200);
+    return;
+}
+
+void API::turnHalf() {
+    delay(100);
+
+    double angle_goal;
+
+    double currentAngle = angle();
+    if(currentAngle < 45 || currentAngle > 315) {
+        angle_goal = 180;
+    } else if(currentAngle > 45 && currentAngle < 135) {
+        angle_goal = 270;
+    } else if(currentAngle > 135 && currentAngle < 225) {
+        angle_goal = 0;
+    } else {
+        angle_goal = 90;
+    }
+
+    angle_goal -= 0; // to fix overshoot
+
+    turnToHalf(angle_goal); //left 90 based on current orientation
     // delay(200);
     return;
 }
