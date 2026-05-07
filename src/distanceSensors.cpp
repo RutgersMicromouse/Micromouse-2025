@@ -13,11 +13,11 @@ void setupDistanceSensors() {
   }
 
   Serial.println("✅ VL53L1X sensor initialized.");
-  sensor.setDistanceMode(VL53L1X::Long);
-  sensor.setMeasurementTimingBudget(50000);
-  sensor.startContinuous(50);
+  sensor.setDistanceMode(VL53L1X::Short);
+  sensor.setMeasurementTimingBudget(20000);
+  sensor.startContinuous(20);
 
-    pinMode(rightSensor, INPUT);
+   pinMode(rightSensor, INPUT);
     pinMode(leftSensor, INPUT);
 }
 

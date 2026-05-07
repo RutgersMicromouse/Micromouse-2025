@@ -7,7 +7,7 @@ void turnTo(char direction)
     double error = 0;
     double totalError = 0;
 
-    double kp = 0.65;
+    double kp = 0.85;
 
     double leftMotorSpeed = 0;
     double rightMotorSpeed = 0;

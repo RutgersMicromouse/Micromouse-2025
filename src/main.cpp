@@ -10,7 +10,7 @@
 #include "Astar.h"
 #include "floodfill.h"
 
-int bl = 160;
+int bl = 180;
 const int HAND_THRESHOLD = 120;   // mm distance for hand detection
 const int START_DELAY = 1500;     // 1.5 second delay
 
@@ -49,31 +49,33 @@ void setup() {
   setupDistanceSensors();
 
   //HALF BLOCK
-  straight('N', 80);
+  straight('N', 90);
   delay(500);
- 
+
+
   initialize_maze(15, 15, true); //Set to 15 15 for the maze center, 31 and 31
   floodfill();
+  stopMotors();
   initialize_maze(1, 1, false);
   floodfill();
   delay(250);
 
-  turnTo('N');
-  delay(100);
-  moveRightMotor(-50);
-  moveLeftMotor(-50);
-  delay(1000);
-  stopMotors();
-  delay(1000);
+  // turnTo('N');
+  // delay(100);
+  // moveRightMotor(-50);
+  // moveLeftMotor(-50);
+  // delay(1000);
+  // stopMotors();
+  // delay(1000);
 
-  straight('N', 80);
-  Serial.println("Running A Star");
-  Astar(16, 16); //16 by 16 for the center
+  // straight('N', 80);
+  // Serial.println("Running A Star");
+  // Astar(16, 16); //16 by 16 for the center
   
 }
 
 void loop() {
 
-  //Serial.println(checkFrontWall());
+ // Serial.printf("%d \t %d\n", getLeftEncoder(), getRightEncoder());
 
 }

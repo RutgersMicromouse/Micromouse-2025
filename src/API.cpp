@@ -26,7 +26,7 @@
     //SW --> C
     //NW --> D
 
-#define blockLength 160
+#define blockLength 180
 
 static char dirgoal = 'N';
 

@@ -5,41 +5,34 @@
 
 #define rightSensor 3
 #define leftSensor 4
+#define DIA 32
 
 int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
 
-double baseTime = .35e6; //400e6 --> 5/7 //0.35 for 20 //
-double halfBlock = 90;
-//double blockLength = 160;
+double rightTicks = 411;
+double leftTicks = 404;
+double blockLength = 180;
 
+double averageTick = ((rightTicks + leftTicks) * 0.5);
 
 //Center --> 4cm
 //Max distance from other sensor while hitting opposite wall --> 8 cm
 void straight(char direction, int distance)
 {
+
+    double rotations = distance / (PI * DIA);
+    double ticksPerBlock = averageTick * rotations;
     
-    double baseSpeed = 100; //50 PWM --> 0.605 seconds
+    double baseSpeed = 100; 
     double Km = 0.75;//0.5;
-    double Td = 0.4;//0.75;
+    double Td = 0.30;//0.75;
     double Ka = 0.25;
-
-    double runTime = baseTime;
-    //This if statement is for 1/2 block
-    if(distance == halfBlock) {
-        runTime = runTime * 0.35;
-    }
-
-    double constantRatio = 0;
-    double decelTime = 2 * runTime * (1 - constantRatio);
-    double decelRate = -(baseSpeed/decelTime);
 
     double startTime = micros();
     double currentTime = micros();
     double oldTime = micros();
-
-    double timeElapsed = 0;
 
     double currentError = getDistError();
     double oldError = currentError;
@@ -86,7 +79,7 @@ void straight(char direction, int distance)
 
     double speed = baseSpeed;
 
-    while((timeElapsed < (constantRatio * runTime) + decelTime))
+    while((0.5 * (getLeftEncoder() + getRightEncoder())) < ticksPerBlock) 
     {
 
         //Checking the front to not crash
@@ -97,17 +90,7 @@ void straight(char direction, int distance)
         }
 
         currentTime = micros();
-        timeElapsed = currentTime - startTime;
-
-        // DECELERATION PHASE
-        if(timeElapsed > constantRatio * runTime)
-        {
-            speed = speed + (decelRate*(currentTime - oldTime));
-
-            if(speed < 0)
-                speed = 0;
-        }
-
+        
         // PID WALL FOLLOW
         currentError = getDistError();
         currentAngle = getAngle();
@@ -135,13 +118,8 @@ void straight(char direction, int distance)
 
     }
 
-    if(distance != 180) {
-        moveLeftMotor(0);
-        moveRightMotor(0);
-    } else {
-        moveLeftMotor(20);
-        moveRightMotor(20);
-    }
+    moveLeftMotor(0);
+    moveRightMotor(0);
     delay(100);
 
 }
@@ -292,3 +270,4 @@ double getDistError()
 
     return heldError;
 }
+
