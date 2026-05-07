@@ -141,12 +141,19 @@ void setup() {
 }
 
 void loop() {
-  double leftDist = front();
+  // double leftDist = front();
 
-  // 5. Print the results
-  Serial.println("Front Distance: " + String(leftDist) + " mm");
+  // // 5. Print the results
+  // Serial.println("Front Distance: " + String(leftDist) + " mm");
 
   
-  // A 50ms delay is much better for responsive robotics than 1000ms!
+  // // A 50ms delay is much better for responsive robotics than 1000ms!
+  // delay(50);
+
+  double leftDist = getLeftSideDist();
+  double rightDist = getRightSideDist();
+  // 5. Print the results
+  Serial.println("Left Distance: " + String(leftDist) + " mm, Right Distance: " + String(rightDist) + " mm");
   delay(50);
+  
 }
