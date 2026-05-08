@@ -421,7 +421,7 @@ void move(char direction) {
 			    API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'W': // turnLeft
-			    API::turnLeft(); API::moveForward(1);
+			    API::turnRight(); API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'E': // turnRight		
 			    API::turnRight(); API::moveForward(1);
@@ -437,7 +437,7 @@ void move(char direction) {
 			    API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'E': // turnLeft
-			    API::turnLeft(); API::moveForward(1);
+			    API::turnRight(); API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'W': // turnRight
 			    API::turnRight(); API::moveForward(1);
@@ -453,7 +453,7 @@ void move(char direction) {
 			    API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'N': // turnLeft
-			    API::turnLeft(); API::moveForward(1);
+			    API::turnRight(); API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'S': // turnRight
 			    API::turnRight(); API::moveForward(1);
@@ -469,7 +469,7 @@ void move(char direction) {
 			    API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'S': // turnLeft
-			    API::turnLeft(); API::moveForward(1);
+			    API::turnRight(); API::turnRight(); API::turnRight(); API::moveForward(1);
 			    break;
 		    case 'N': // turnRight
 			    API::turnRight(); API::moveForward(1);
@@ -708,7 +708,8 @@ void backTrack() {
 			API::turnRight(); API::turnRight();
 			break;
 		case 'E': 
-			API::turnLeft();
+			//API::turnLeft();
+			API::turnRight(); API::turnRight(); API::turnRight();
 			break;
 		case 'W': 
 			API::turnRight();

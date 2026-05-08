@@ -65,7 +65,7 @@ void API::turnRight() {
         angle_goal = 0;
     }
 
-    angle_goal += 2;
+    //angle_goal += 2;
 
     turnTo(angle_goal); //right 90 based on current orientation
     // delay(200);

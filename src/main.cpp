@@ -90,29 +90,29 @@ void setup() {
    initialize();
    runMaze('c');
    
-   /*
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   API::turnRight();
-   delay(200);
-   */
+   
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  API::turnRight();
+  //  delay(200);
+   
    /*
    API::turnLeft();
    API::turnLeft(); 

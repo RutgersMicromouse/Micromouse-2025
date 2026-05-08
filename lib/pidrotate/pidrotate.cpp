@@ -1,8 +1,8 @@
 #include "pidrotate.h"
 
 double Kp = 1.2;
-double Ki = 0.0;
-double Kd = 0.01;
+double Ki = 0.5;
+double Kd = 0.0;
 double mult = 1;
 
 double Kp_half = 1.05;
@@ -69,7 +69,7 @@ void turnTo(double goal_angle) {
 const double iLimit = 50.0; 
 
 void turnTo(double goal_angle) {    
-    double basespeed = 90;
+    double basespeed = -7;
     unsigned long t_old = micros();
     double error_int = 0;
     double error_old = 0;
@@ -116,6 +116,8 @@ void turnTo(double goal_angle) {
         double error_deriv = (error - error_old) / dt;
 
         double angleOut = basespeed + (Kp * error + Ki * error_int + Kd * error_deriv) * mult;
+
+        printf("Goal: %f, Current Angle: %f, Error: %f, Output: %f\n", goal_angle, angle(), error, angleOut);
 
         // 5. Output to Motors
         setLeftPWM(angleOut); 
