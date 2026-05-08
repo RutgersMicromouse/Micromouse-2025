@@ -16,13 +16,13 @@ void tofSetup() {
     // the minimum timing budget is 20 ms for short distance mode and 33 ms for
     // medium and long distance modes. See the VL53L1X datasheet for more
     // information on range and timing limits.
-    frontToF.setDistanceMode(VL53L1X::Long);
-    frontToF.setMeasurementTimingBudget(50000);
+    frontToF.setDistanceMode(VL53L1X::Short);
+    frontToF.setMeasurementTimingBudget(20000);
 
     // Start continuous readings at a rate of one measurement every 50 ms (the
     // inter-measurement period). This period should be at least as long as the
     // timing budget.
-    frontToF.startContinuous(50);
+    frontToF.startContinuous(20);
     Serial.println("Front ToF initialized");
 }
 

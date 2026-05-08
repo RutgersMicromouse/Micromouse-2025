@@ -7,13 +7,13 @@
 
 double getDistError();
 
-double baseTime = 0.5e6; //400e6 --> 5/7 //0.35 for 20 //
+double baseTime = 0.375e6; //400e6 --> 5/7 //0.35 for 20 //
 double halfBlock = 90;
 //double blockLength = 160;
 
 double Kp_angle = 1;
 double Ki_angle = 0.0;
-double Kd_angle = 0.1;
+double Kd_angle = 0.2;
 
 double identity_diag[8] = {0, 45, 90, 135, 180, 225, 270, 315};
 void pidForwardSetup() {
@@ -25,10 +25,10 @@ void pidForwardSetup() {
 void pidForward(double distance)
 {
     
-    double baseSpeed = 200; //50 PWM --> 0.605 seconds
-    double Km = 1;//0.5;
-    double Td = 0.4;//0.75;
-    double Ka = 0.25;
+    double baseSpeed = 200; //50 PWM --> 0.605 seconds | 250 --> 0.28 seconds
+    double Km = 1.1;//0.5;
+    double Td = 0.55;//0.75;
+    double Ka = 0.2;
     double runTime = baseTime;
     //This if statement is for 1/2 block
     if(distance == halfBlock) {
@@ -74,7 +74,7 @@ void pidForward(double distance)
     {
 
         //Checking the front to not crash
-        if(front() < 60) {
+        if(front() < 80) {
             setLeftPWM(0);
             setRightPWM(0);
             break;
