@@ -7,11 +7,11 @@
 
 double getDistError();
 
-double baseTime = .35e6; //400e6 --> 5/7 //0.35 for 20 //
+double baseTime = 0.5e6; //400e6 --> 5/7 //0.35 for 20 //
 double halfBlock = 90;
 //double blockLength = 160;
 
-double Kp_angle = 0.8;
+double Kp_angle = 1;
 double Ki_angle = 0.0;
 double Kd_angle = 0.1;
 
@@ -25,11 +25,10 @@ void pidForwardSetup() {
 void pidForward(double distance)
 {
     
-    double baseSpeed = 100; //50 PWM --> 0.605 seconds
-    double Km = 0.75;//0.5;
+    double baseSpeed = 200; //50 PWM --> 0.605 seconds
+    double Km = 1;//0.5;
     double Td = 0.4;//0.75;
     double Ka = 0.25;
-
     double runTime = baseTime;
     //This if statement is for 1/2 block
     if(distance == halfBlock) {
