@@ -10,25 +10,21 @@ int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
 
-double baseTime = .35e6; //400e6 --> 5/7 //0.35 for 20 //
-double halfBlock = 90;
-//double blockLength = 160;
+double baseTime = .34e6; //0.35 for 100
+//double halfBlock = 90;
 
-
-//Center --> 4cm
-//Max distance from other sensor while hitting opposite wall --> 8 cm
 void straight(char direction, int distance)
 {
     
-    double baseSpeed = 100; //50 PWM --> 0.605 seconds
+    double baseSpeed = 125; //50 PWM --> 0.605 seconds
     double Km = 0.75;//0.5;
     double Td = 0.4;//0.75;
     double Ka = 0.25;
 
     double runTime = baseTime;
     //This if statement is for 1/2 block
-    if(distance == halfBlock) {
-        runTime = runTime * 0.35;
+    if(distance != 180) {
+        runTime = runTime * 0.4;
     }
 
     double constantRatio = 0;
@@ -90,7 +86,7 @@ void straight(char direction, int distance)
     {
 
         //Checking the front to not crash
-        if(checkFrontWall() < 60) {
+        if(checkFrontWall() < 90) {
             moveLeftMotor(0);
             moveRightMotor(0);
             break;
@@ -132,19 +128,121 @@ void straight(char direction, int distance)
 
         // Serial.printf("Speed: %lf, %lf\n", leftSpeed, rightSpeed);
 
-
     }
 
     if(distance != 180) {
         moveLeftMotor(0);
         moveRightMotor(0);
+        delay(1000);
+
     } else {
-        moveLeftMotor(20);
+        moveLeftMotor(20); //15
         moveRightMotor(20);
     }
-    delay(100);
+
+    delay(50);
 
 }
+
+void straightLab(char direction)
+{
+    
+    double baseSpeed = 100; //50 PWM --> 0.605 seconds
+    double Km = 0.75;//0.5;
+    double Td = 0.3;//0.75;
+    double Ka = 0.25;
+
+    double startTime = micros();
+    double currentTime = micros();
+    double oldTime = micros();
+
+    double currentError = getDistError();
+    double oldError = currentError;
+
+    double angle_goal;
+
+    double currentAngle = getAngle();
+    char goalDirection;
+
+    if(currentAngle >= 337.5 || currentAngle < 22.5) {
+        angle_goal = 0;
+        goalDirection = 'N';
+    }
+    else if(currentAngle >= 22.5 && currentAngle < 67.5) {
+        angle_goal = 45;
+        goalDirection = 'A'; // NE
+    }
+    else if(currentAngle >= 67.5 && currentAngle < 112.5) {
+        angle_goal = 90;
+        goalDirection = 'E';
+    }
+    else if(currentAngle >= 112.5 && currentAngle < 157.5) {
+        angle_goal = 135;
+        goalDirection = 'B'; // SE
+    }
+    else if(currentAngle >= 157.5 && currentAngle < 202.5) {
+        angle_goal = 180;
+        goalDirection = 'S';
+    }
+    else if(currentAngle >= 202.5 && currentAngle < 247.5) {
+        angle_goal = 225;
+        goalDirection = 'C'; // SW
+    }
+    else if(currentAngle >= 247.5 && currentAngle < 292.5) {
+        angle_goal = 270;
+        goalDirection = 'W';
+    }
+    else {
+        angle_goal = 315;
+        goalDirection = 'D'; // NW
+    }
+
+    int Wall_threshold = 8;
+
+    double speed = baseSpeed;
+
+    while(checkFrontWall() > 100)
+    {
+
+        // //Checking the front to not crash
+        // if(checkFrontWall() < 60) {
+        //     moveLeftMotor(0);
+        //     moveRightMotor(0);
+        //     break;
+        // }
+
+        currentTime = micros();
+
+        // PID WALL FOLLOW
+        currentError = getDistError();
+        currentAngle = getAngle();
+
+        double dt = (currentTime - oldTime)/1e6;
+        if(dt <= 0) dt = 0.001;
+
+        double derError = (currentError - oldError)/dt;
+        double angleError = angle_goal - currentAngle;
+        if (angleError < -180) angleError += 360;
+        if (angleError > 180) angleError -= 360; 
+        double correction = Km * currentError + Td*Km*derError + Ka*angleError;
+
+        double leftSpeed = speed + correction;
+        double rightSpeed = speed - correction;
+
+        moveLeftMotor(leftSpeed);
+        moveRightMotor(rightSpeed);
+
+        oldError = currentError;
+        oldTime = currentTime;
+
+
+    }
+
+    stopMotors();
+    delay(300);
+
+}
+
 
 void straightASTAR(char direction)
 {

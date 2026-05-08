@@ -31,26 +31,31 @@
 static char dirgoal = 'N';
 
 bool API::wallFront() {
-
-    std::cout << "wallFront" << std::endl;
+ //   std::cout << "wallFront" << std::endl;
     int16_t distance = checkFrontWall();
     return distance < 80;
 }
 
 bool API::wallRight() {
-    std::cout << "wallRight" << std::endl;
+  //  std::cout << "wallRight" << std::endl;
     return checkRightWall();
 }
 
 bool API::wallLeft() {
-    std::cout << "wallLeft" << std::endl;
+  //  std::cout << "wallLeft" << std::endl;
     return checkLeftWall();
 }
 
 void API::moveForward(int distance) {
-    std::cout << "moveForward ";
+   // std::cout << "moveForward ";
     int actualDistance = distance * blockLength;
     straight(dirgoal, actualDistance);
+}
+
+//LAB
+void API::moveForwardLab() {
+    std::cout << "moveForward Labyrinth";
+    straightLab(dirgoal);
 }
 
 void API::moveForwardHalf(int numHalfSteps) {
@@ -74,7 +79,7 @@ void API::turnRight() {
             dirgoal = 'N';
             break;
         default:
-            Serial.printf("crash: turn right invalid\n");
+         //   Serial.printf("crash: turn right invalid\n");
             while(1);
     };
     turnTo(dirgoal);
@@ -95,7 +100,7 @@ void API::turnLeft() {
             dirgoal = 'S';
             break;
         default:
-            Serial.printf("crash: turn left invalid\n");
+       //     Serial.printf("crash: turn left invalid\n");
             while(1);
     };
     turnTo(dirgoal);
@@ -116,7 +121,7 @@ void API::turnHalf() {
             dirgoal = 'E';
             break;
         default:
-            Serial.printf("crash: turn left invalid\n");
+        //    Serial.printf("crash: turn left invalid\n");
             while(1);
     };
     turnTo(dirgoal);
@@ -144,7 +149,7 @@ void API::turnRight45() {
             dirgoal = 'D';
             break;
         default:
-            Serial.printf("crash: turn left invalid\n");
+          //  Serial.printf("crash: turn left invalid\n");
             while(1);
     };
     turnTo(dirgoal);
@@ -171,7 +176,7 @@ void API::turnLeft45() {
             dirgoal = 'A';
             break;
         default:
-            Serial.printf("crash: turn left invalid\n");
+          //  Serial.printf("crash: turn left invalid\n");
             while(1);
     };
     turnTo(dirgoal);

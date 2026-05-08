@@ -5,6 +5,7 @@
 
 void straight(char direction, int distance);
 void straightASTAR(char direction);
+void straightLab(char direction);
 int16_t leftWallDistance();
 int16_t rightWallDistance();
 double getDistError();
